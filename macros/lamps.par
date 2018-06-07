@@ -1,0 +1,51 @@
+tpcBFieldAxis  s z  # axis of B-field direction
+tpcEFieldAxis  s z  # axis of E-field direction
+tpcDriftAxis   s z  # direction of electric field
+tbStart i 0
+nTbs    i 512
+tbTime  d 40   # [ns]
+
+### Tpc
+worldSize d  1000.
+rMinTPC   d  150.
+rMaxTPC   d  500.
+dzTPC     d  1200.
+zOffset   d  300.
+
+### PSA
+ADCThreshold d 10
+
+### KBDriftElectron
+gasDriftVelocity  d  0.0542411  # [mm/ns]
+gasCoefLongDiff   d  0.115461
+gasCoefTranDiff   d  0.0662528
+gasEIonize        d  2.62e-05   # ionization energy in gas [MeV]
+nElInCluster      i  10000  # number of electrons in electron cluster (related to speed of LADriftElectronTask)
+tpcGEMDataFile    s  $KEBIPATH/input/tripleGEM.root
+
+### KBDriftElectron
+eVToADC d 0.0002
+
+### LAPadPlane
+ppNLayerDivision  i 2
+  innerTrackerDivisionIndex i 0
+
+  ppArcLength0    d 3.
+  ppRadius0       d 10.
+  ppNLayers0      i 14
+
+  ppArcLength1    d 4.
+  ppRadius1       d 15.
+  ppNLayers1      i 14
+
+### For one side pad plane
+tpcCathodePlaneK  d -300.
+tpcNPadPlanes     i 1
+  tpcPadPlaneK0   d 900.
+
+### LHTrackFinder parameters
+LHTF_defaultScale d 2.5
+LHTF_trackWCutLL d 4.
+LHTF_trackWCutHL d 10.
+LHTF_trackHCutLL d 2.
+LHTF_trackHCutHL d 4.
