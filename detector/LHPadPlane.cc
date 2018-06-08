@@ -369,7 +369,6 @@ TH2* LHPadPlane::GetHist(Option_t *option)
     pad -> AddPadCorner(xPoints[1],yPoints[1]);
     pad -> AddPadCorner(xPoints[2],yPoints[2]);
     pad -> AddPadCorner(xPoints[3],yPoints[3]);
-    pad -> AddPadCorner(xPoints[4],yPoints[4]);
 
     h2 -> AddBin(5, xPoints, yPoints);
     /*

@@ -10,8 +10,8 @@ class LHTpc : public KBTpc
     virtual ~LHTpc() {};
 
   protected:
-    bool BuildGeometry();
-    bool BuildDetectorPlane();
+    virtual bool BuildGeometry();
+    virtual bool BuildDetectorPlane();
 
   ClassDef(LHTpc, 1)
 };

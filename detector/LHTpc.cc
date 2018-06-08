@@ -2,7 +2,7 @@
 #include "LHPadPlane.hh"
 
 LHTpc::LHTpc()
-:KBTpc("LampsTpc","LAMPS TPC")
+:KBTpc("LAMPSTPC","LAMPS TPC")
 {
 }
 
