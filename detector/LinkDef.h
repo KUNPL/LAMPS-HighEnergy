@@ -6,5 +6,6 @@
 
 #pragma link C++ class LHTpc+;
 #pragma link C++ class LHPadPlane+;
+#pragma link C++ class LHPadPlaneRPad+;
 
 #endif

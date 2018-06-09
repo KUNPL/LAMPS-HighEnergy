@@ -1,5 +1,6 @@
 #include "LHTpc.hh"
 #include "LHPadPlane.hh"
+#include "LHPadPlaneRPad.hh"
 
 LHTpc::LHTpc()
 :KBTpc("LAMPSTPC","LAMPS TPC")
@@ -44,7 +45,12 @@ bool LHTpc::BuildGeometry()
 
 bool LHTpc::BuildDetectorPlane()
 {
-  auto padplane = new LHPadPlane();
+  KBPadPlane *padplane = nullptr;
+  if (fPar->GetParString("PadPlaneType") == "LHPadPlaneRPad")
+    padplane = new LHPadPlaneRPad();
+  else
+    padplane = new LHPadPlane();
+
   padplane -> SetParameterContainer(fPar);
   padplane -> SetPlaneID(0);
   padplane -> SetPlaneK(fPlaneK[0]);

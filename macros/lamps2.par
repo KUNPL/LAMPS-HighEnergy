@@ -7,7 +7,7 @@ tbTime  d 40   # [ns]
 
 ### Tpc
 worldSize d  1000.
-rMinTPC   d  150.
+rMinTPC   d  100.
 rMaxTPC   d  500.
 dzTPC     d  1200.
 zOffset   d  300.
@@ -50,4 +50,4 @@ LHTF_trackWCutHL  d 24. # 10.
 LHTF_trackHCutLL  d 10. # 2.
 LHTF_trackHCutHL  d 24. # 4.
 
-PadPlaneType s LHPadPlane
+PadPlaneType s LHPadPlaneRPad
