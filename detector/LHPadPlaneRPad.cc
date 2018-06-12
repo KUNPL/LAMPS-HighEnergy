@@ -23,6 +23,17 @@ bool LHPadPlaneRPad::Init()
 {
   fRMin = fPar -> GetParDouble("rMinTPC");
   fRMax = fPar -> GetParDouble("rMaxTPC");
+  fPadGap = fPar -> GetParDouble("PadGap");
+  fPadWid = fPar -> GetParDouble("PadWidth");
+  fPadHei = fPar -> GetParDouble("PadHeight");
+  fYPPMin = fPar -> GetParDouble("YPPMin");
+  if (fYPPMin+.5*fPadHei > fRMin) {
+    cout << "'YPPMin' + 'fPadHei'/2 should be larger than 'rMinTPC'!  :  " << fYPPMin+.5*fPadHei << " < " << fRMin << endl;
+    return false;
+  }
+  fYPPMax = fPar -> GetParDouble("YPPMax");
+  fWPPBot = fPar -> GetParDouble("WPPBottom");
+  fPadAreaLL = fPar -> GetParDouble("PadAreaLL");
 
   fTanPi1o8 = TMath::Tan(TMath::Pi()*1./8.);
   fTanPi3o8 = TMath::Tan(TMath::Pi()*3./8.);
@@ -46,7 +57,6 @@ bool LHPadPlaneRPad::Init()
   for (Int_t section = 0; section < 8; section++)
   {
     Double_t phiSection = section * TMath::Pi()/4.;
-    //Double_t phiSection = section * TMath::Pi()/4. + TMath::Pi()/2.;
 
     for (Int_t layer = 0; true; ++layer) 
     {
@@ -79,7 +89,8 @@ bool LHPadPlaneRPad::Init()
           bool cuttedTo5 = false;
 
           if (yPadTop < fFuncXRightBound->Eval(xPadInn)) {
-            fHalfRowMax.push_back(row-1);
+            if (section == 0)
+              fHalfRowMax.push_back(row-1);
             breakFromRow = true;
             break;
           }
@@ -91,93 +102,119 @@ bool LHPadPlaneRPad::Init()
           xPadOut = pm*xPadOut;
 
           TVector2 posCenter(.5*(xPadInn+xPadOut), .5*(yPadBot+yPadTop));
+          auto r = sqrt(posCenter.X()*posCenter.X() + posCenter.Y()*posCenter.Y());
+          if (r>fRMax) {
+            if (section == 0)
+              fHalfRowMax.push_back(row-1);
+            breakFromRow = true;
+            break;
+          }
           posCenter = posCenter.Rotate(phiSection);
-          auto pad = AddPad(section, pm*row, layer, posCenter.X(), posCenter.Y());
 
-          TVector2 posCorner(xPadInn, yPadTop);
-          posCorner = posCorner.Rotate(phiSection);
-          pad -> AddPadCorner(posCorner.X(), posCorner.Y());
+          TVector2 posCorner0(xPadInn, yPadTop);
+          if (sqrt(xPadInn*xPadInn + yPadTop*yPadTop) > fRMax)
+            posCorner0.Set(xPadInn,sqrt(fRMax*fRMax-xPadInn*xPadInn));
+          posCorner0 = posCorner0.Rotate(phiSection);
           if (cuttedTo3)
           {
-            posCorner.Set(xPadInn, fFuncXRightBound->Eval(pm*xPadInn));
-            posCorner = posCorner.Rotate(phiSection);
-            pad -> AddPadCorner(posCorner.X(), posCorner.Y());
+            TVector2 posCorner1(xPadInn, fFuncXRightBound->Eval(pm*xPadInn));
+            posCorner1 = posCorner1.Rotate(phiSection);
 
-            posCorner.Set(pm*fFuncXRightBoundInverse->Eval(yPadTop), yPadTop);
-            posCorner = posCorner.Rotate(phiSection);
-            pad -> AddPadCorner(posCorner.X(), posCorner.Y());
-
-            auto xAverage = 0.;
-            auto yAverage = 0.;
-            auto corners = pad -> GetPadCorners();
-            for (auto iCorner = 0; iCorner < 3; ++iCorner) {
-              TVector2 corner = corners->at(iCorner);
-              xAverage += corner.X();
-              yAverage += corner.Y();
+            TVector2 posCorner2(pm*fFuncXRightBoundInverse->Eval(yPadTop), yPadTop);
+            posCorner2 = posCorner2.Rotate(phiSection);
+            auto d01 = posCorner0 - posCorner1;
+            auto d02 = posCorner0 - posCorner2;
+            auto a = d01.X()*d01.X() + d01.Y()*d01.Y();
+            auto b = d02.X()*d02.X() + d02.Y()*d02.Y();
+            if (.5*a*b < fPadAreaLL) {
+              if (section == 0)
+                fHalfRowMax.push_back(row-1);
+              breakFromRow = true;
+              break;
             }
-            pad -> SetPosition(xAverage/3, yAverage/3);
+
+            auto pad = NewPad(section, pm*row, layer);
+            pad -> AddPadCorner(posCorner0.X(), posCorner0.Y());
+            pad -> AddPadCorner(posCorner1.X(), posCorner1.Y());
+            pad -> AddPadCorner(posCorner2.X(), posCorner2.Y());
+
+            auto xCenter = (posCorner0.X()+posCorner1.X()+posCorner2.X())/3.;
+            auto yCenter = (posCorner0.Y()+posCorner1.Y()+posCorner2.Y())/3.;
+            pad -> SetPosition(xCenter, yCenter);
 
             continue;
           }
 
-          posCorner.Set(xPadOut, yPadTop);
-          posCorner = posCorner.Rotate(phiSection);
-          pad -> AddPadCorner(posCorner.X(), posCorner.Y());
+          TVector2 posCorner1(xPadOut, yPadTop);
+          if (sqrt(xPadOut*xPadOut + yPadTop*yPadTop) > fRMax)
+            posCorner1.Set(xPadOut,sqrt(fRMax*fRMax-xPadOut*xPadOut));
+          posCorner1 = posCorner1.Rotate(phiSection);
           if (cuttedTo4)
           {
-            posCorner.Set(xPadOut, fFuncXRightBound->Eval(pm*xPadOut));
-            posCorner = posCorner.Rotate(phiSection);
-            pad -> AddPadCorner(posCorner.X(), posCorner.Y());
+            TVector2 posCorner2(xPadOut, fFuncXRightBound->Eval(pm*xPadOut));
+            posCorner2 = posCorner2.Rotate(phiSection);
 
-            posCorner.Set(xPadInn, fFuncXRightBound->Eval(pm*xPadInn));
-            posCorner = posCorner.Rotate(phiSection);
-            pad -> AddPadCorner(posCorner.X(), posCorner.Y());
+            TVector2 posCorner3(xPadInn, fFuncXRightBound->Eval(pm*xPadInn));
+            posCorner3 = posCorner3.Rotate(phiSection);
 
-            auto xAverage = 0.;
-            auto yAverage = 0.;
-            auto corners = pad -> GetPadCorners();
-            for (auto iCorner = 0; iCorner < 4; ++iCorner) {
-              TVector2 corner = corners->at(iCorner);
-              xAverage += corner.X();
-              yAverage += corner.Y();
-            }
-            pad -> SetPosition(xAverage/4, yAverage/4);
+            auto pad = NewPad(section, pm*row, layer);
+            pad -> AddPadCorner(posCorner0.X(), posCorner0.Y());
+            pad -> AddPadCorner(posCorner1.X(), posCorner1.Y());
+            pad -> AddPadCorner(posCorner2.X(), posCorner2.Y());
+            pad -> AddPadCorner(posCorner3.X(), posCorner3.Y());
+
+            auto xCenter = (posCorner0.X()+posCorner1.X()+posCorner2.X()+posCorner3.X())/4.;
+            auto yCenter = (posCorner0.Y()+posCorner1.Y()+posCorner2.Y()+posCorner3.Y())/4.;
+            pad -> SetPosition(xCenter, yCenter);
 
             continue;
           }
 
           if (cuttedTo5)
           {
-            posCorner.Set(xPadOut, fFuncXRightBound->Eval(pm*xPadOut));
-            posCorner = posCorner.Rotate(phiSection);
-            pad -> AddPadCorner(posCorner.X(), posCorner.Y());
+            TVector2 posCorner2(xPadOut, fFuncXRightBound->Eval(pm*xPadOut));
+            posCorner2 = posCorner2.Rotate(phiSection);
 
-            posCorner.Set(pm*fFuncXRightBoundInverse->Eval(yPadBot), yPadBot);
-            posCorner = posCorner.Rotate(phiSection);
-            pad -> AddPadCorner(posCorner.X(), posCorner.Y());
+            TVector2 posCorner3(pm*fFuncXRightBoundInverse->Eval(yPadBot), yPadBot);
+            posCorner3 = posCorner3.Rotate(phiSection);
 
-            posCorner.Set(xPadInn, yPadBot);
-            posCorner = posCorner.Rotate(phiSection);
-            pad -> AddPadCorner(posCorner.X(), posCorner.Y());
+            TVector2 posCorner4(xPadInn, yPadBot);
+            if (sqrt(xPadInn*xPadInn + yPadBot*yPadBot) < fRMin)
+              posCorner4.Set(xPadInn,sqrt(fRMin*fRMin-xPadInn*xPadInn));
+            posCorner4 = posCorner4.Rotate(phiSection);
 
-            auto xAverage = 0.;
-            auto yAverage = 0.;
-            auto corners = pad -> GetPadCorners();
-            for (auto iCorner = 0; iCorner < 5; ++iCorner) {
-              TVector2 corner = corners->at(iCorner);
-              xAverage += corner.X();
-              yAverage += corner.Y();
-            }
-            pad -> SetPosition(xAverage/5, yAverage/5);
+            auto pad = NewPad(section, pm*row, layer);
+            pad -> AddPadCorner(posCorner0.X(), posCorner0.Y());
+            pad -> AddPadCorner(posCorner1.X(), posCorner1.Y());
+            pad -> AddPadCorner(posCorner2.X(), posCorner2.Y());
+            pad -> AddPadCorner(posCorner3.X(), posCorner3.Y());
+            pad -> AddPadCorner(posCorner4.X(), posCorner4.Y());
+
+            auto xCenter = (posCorner0.X()+posCorner1.X()+posCorner2.X()+posCorner3.X()+posCorner4.X())/5.;
+            auto yCenter = (posCorner0.Y()+posCorner1.Y()+posCorner2.Y()+posCorner3.Y()+posCorner4.Y())/5.;
+            pad -> SetPosition(xCenter, yCenter);
           }
-          else {
-            posCorner.Set(xPadOut, yPadBot);
-            posCorner = posCorner.Rotate(phiSection);
-            pad -> AddPadCorner(posCorner.X(), posCorner.Y());
+          else // normal rectangular pad
+          {
+            TVector2 posCorner2(xPadOut, yPadBot);
+            if (sqrt(xPadOut*xPadOut + yPadBot*yPadBot) < fRMin)
+              posCorner2.Set(xPadOut,sqrt(fRMin*fRMin-xPadOut*xPadOut));
+            posCorner2 = posCorner2.Rotate(phiSection);
 
-            posCorner.Set(xPadInn, yPadBot);
-            posCorner = posCorner.Rotate(phiSection);
-            pad -> AddPadCorner(posCorner.X(), posCorner.Y());
+            TVector2 posCorner3(xPadInn, yPadBot);
+            if (sqrt(xPadInn*xPadInn + yPadBot*yPadBot) < fRMin)
+              posCorner3.Set(xPadInn,sqrt(fRMin*fRMin-xPadInn*xPadInn));
+            posCorner3 = posCorner3.Rotate(phiSection);
+
+            auto pad = NewPad(section, pm*row, layer);
+            pad -> AddPadCorner(posCorner0.X(), posCorner0.Y());
+            pad -> AddPadCorner(posCorner1.X(), posCorner1.Y());
+            pad -> AddPadCorner(posCorner2.X(), posCorner2.Y());
+            pad -> AddPadCorner(posCorner3.X(), posCorner3.Y());
+
+            auto xCenter = (posCorner0.X()+posCorner1.X()+posCorner2.X()+posCorner3.X())/4.;
+            auto yCenter = (posCorner0.Y()+posCorner1.Y()+posCorner2.Y()+posCorner3.Y())/4.;
+            pad -> SetPosition(xCenter, yCenter);
           }
         }
       }
@@ -187,35 +224,15 @@ bool LHPadPlaneRPad::Init()
   fChannelArray -> Sort();
 
   Int_t numPads = fChannelArray -> GetEntriesFast();
-  for (Int_t iPad = 0; iPad < numPads; iPad++) {
-    KBPad *pad = (KBPad *) fChannelArray -> At(iPad);
-    auto pos = pad -> GetPosition();
-    auto r = sqrt(pos.X()*pos.X() + pos.Y()*pos.Y());
+  for (Int_t padID = 0; padID < numPads; ++padID) {
+    auto pad = (KBPad *) fChannelArray -> At(padID);
+    pad -> SetPadID(padID);
 
-    if (r < fRMin || r > fRMax) {
-      pad -> SetPadID(-1);
-      fChannelArray -> Remove(pad);
-      continue;
-    }
-
-    auto corners = pad -> GetPadCorners();
-    Int_t numPoints = corners -> size();
-    if (numPoints == 3) {
-      auto corner1 = corners -> at(0);
-      auto corner2 = corners -> at(1);
-      auto corner3 = corners -> at(2);
-      if (.5*abs(corner1.X()-corner2.X())*abs(corner1.Y()-corner3.Y()) < 5)
-        pad -> SetPadID(-1);
-        fChannelArray -> Remove(pad);
-    }
-  }
-  fChannelArray -> Compress();
-
-  numPads = fChannelArray -> GetEntriesFast();
-  for (Int_t iPad = 0; iPad < numPads; iPad++) {
-    KBPad *pad = (KBPad *) fChannelArray -> At(iPad);
-    pad -> SetPadID(iPad);
-    MapPad(pad);
+    std::vector<Int_t> key;
+    key.push_back(pad -> GetSection());
+    key.push_back(pad -> GetRow());
+    key.push_back(pad -> GetLayer());
+    fPadMap.insert(std::pair<std::vector<Int_t>, Int_t>(key,padID));
   }
 
   for (Int_t iSection = 0; iSection < 8; iSection++) {
@@ -224,11 +241,12 @@ bool LHPadPlaneRPad::Init()
       for (Int_t iRow = -nHalfRows; iRow < nHalfRows; iRow++) {
         if (iRow == 0)
           continue;
+
         std::vector<Int_t> key0;
         key0.push_back(iSection);
         key0.push_back(iRow);
         key0.push_back(iLayer);
-        KBPad *pad0 = (KBPad *) fChannelArray -> At(fPadMap[key0]);
+        auto pad0 = (KBPad *) fChannelArray -> At(fPadMap[key0]);
 
         Int_t row1 = iRow+1;
         if (iRow == -1)
@@ -238,12 +256,8 @@ bool LHPadPlaneRPad::Init()
         key1.push_back(iSection);
         key1.push_back(row1);
         key1.push_back(iLayer);
-        KBPad *pad1 = (KBPad *) fChannelArray -> At(fPadMap[key1]);
-
-        if (pad0 -> GetPadID() != -1 && pad1 -> GetPadID() != -1) {
-          pad0 -> AddNeighborPad(pad1);
-          pad1 -> AddNeighborPad(pad0);
-        }
+        auto pad1 = (KBPad *) fChannelArray -> At(fPadMap[key1]);
+        SetNeighborPads(pad0, pad1);
       }
     }
   }
@@ -252,7 +266,7 @@ bool LHPadPlaneRPad::Init()
     for (Int_t iLayer = 0; iLayer < fLayerMax-1; iLayer++) {
       Int_t nHalfRows0 = fHalfRowMax[iLayer];
       Int_t nHalfRows1 = fHalfRowMax[iLayer+1];
-      for (Int_t iRow = -nHalfRows0; iRow < nHalfRows0; iRow++) {
+      for (Int_t iRow = -nHalfRows0; iRow <= nHalfRows0; iRow++) {
         if (iRow == 0)
           continue;
 
@@ -260,43 +274,35 @@ bool LHPadPlaneRPad::Init()
         key0.push_back(iSection);
         key0.push_back(iRow);
         key0.push_back(iLayer);
-        KBPad *pad0 = (KBPad *) fChannelArray -> At(fPadMap[key0]);
+        auto pad0 = (KBPad *) fChannelArray -> At(fPadMap[key0]);
 
-        std::vector<Int_t> key1;
-        key1.push_back(iSection);
-        key1.push_back(iRow);
-        key1.push_back(iLayer+1);
-        KBPad *pad1 = (KBPad *) fChannelArray -> At(fPadMap[key1]);
-
-        if (pad0 -> GetPadID() != -1 && pad1 -> GetPadID() != -1) {
-          pad0 -> AddNeighborPad(pad1);
-          pad1 -> AddNeighborPad(pad0);
+        if (iRow<=nHalfRows1 && iRow>=-nHalfRows1) {
+          std::vector<Int_t> key1;
+          key1.push_back(iSection);
+          key1.push_back(iRow);
+          key1.push_back(iLayer+1);
+          auto pad1 = (KBPad *) fChannelArray -> At(fPadMap[key1]);
+          SetNeighborPads(pad0, pad1);
         }
 
-        if (iRow+1<=nHalfRows1) {
+        auto nextRow = iRow+1 == 0 ?  1 : iRow+1;
+        if (nextRow<=nHalfRows1 && nextRow>=-nHalfRows1) {
           std::vector<Int_t> key2;
           key2.push_back(iSection);
-          key2.push_back(iRow+1);
+          key2.push_back(nextRow);
           key2.push_back(iLayer+1);
-          KBPad *pad2 = (KBPad *) fChannelArray -> At(fPadMap[key2]);
-
-          if (pad0 -> GetPadID() != -1 && pad2 -> GetPadID() != -1) {
-            pad0 -> AddNeighborPad(pad2);
-            pad2 -> AddNeighborPad(pad0);
-          }
+          auto pad2 = (KBPad *) fChannelArray -> At(fPadMap[key2]);
+          SetNeighborPads(pad0, pad2);
         }
 
-        if (iRow-1>=-nHalfRows1) {
+        auto prevRow = iRow-1 == 0 ? -1 : iRow-1;
+        if (prevRow<=nHalfRows1 && prevRow>=-nHalfRows1) {
           std::vector<Int_t> key2;
           key2.push_back(iSection);
-          key2.push_back(iRow-1);
+          key2.push_back(prevRow);
           key2.push_back(iLayer+1);
-          KBPad *pad2 = (KBPad *) fChannelArray -> At(fPadMap[key2]);
-
-          if (pad0 -> GetPadID() != -1 && pad2 -> GetPadID() != -1) {
-            pad0 -> AddNeighborPad(pad2);
-            pad2 -> AddNeighborPad(pad0);
-          }
+          auto pad2 = (KBPad *) fChannelArray -> At(fPadMap[key2]);
+          SetNeighborPads(pad0, pad2);
         }
       }
     }
@@ -304,25 +310,26 @@ bool LHPadPlaneRPad::Init()
 
   for (Int_t iLayer = 0; iLayer < fLayerMax; iLayer++) {
     Int_t nHalfRows = fHalfRowMax[iLayer];
+    if (iLayer != 0 && fHalfRowMax[iLayer-1] > nHalfRows)
+      break;
     for (Int_t iSection = 0; iSection < 8; iSection++) {
       std::vector<Int_t> key0;
       key0.push_back(iSection);
       key0.push_back(nHalfRows);
       key0.push_back(iLayer);
-      KBPad *pad0 = (KBPad *) fChannelArray -> At(fPadMap[key0]);
+      auto pad0 = (KBPad *) fChannelArray -> At(fPadMap[key0]);
 
-      Int_t section1 = iSection+1;
-      if (iSection == 7)
-        section1 = 0;
+      Int_t section1 = iSection-1;
+      if (iSection == 0)
+        section1 = 7;
 
       std::vector<Int_t> key1;
       key1.push_back(section1);
       key1.push_back(-nHalfRows);
       key1.push_back(iLayer);
-      KBPad *pad1 = (KBPad *) fChannelArray -> At(fPadMap[key1]);
+      auto pad1 = (KBPad *) fChannelArray -> At(fPadMap[key1]);
 
-      pad0 -> AddNeighborPad(pad1);
-      pad1 -> AddNeighborPad(pad0);
+      SetNeighborPads(pad0, pad1);
     }
   }
 
@@ -391,7 +398,7 @@ Int_t LHPadPlaneRPad::FindPadID(Double_t i, Double_t j)
 
 Double_t LHPadPlaneRPad::PadDisplacement() const
 {
-  return 10;
+  return 10.;
 }
 
 bool LHPadPlaneRPad::IsInBoundary(Double_t i, Double_t j)
@@ -418,7 +425,10 @@ TH2* LHPadPlaneRPad::GetHist(Option_t *option)
   Int_t selectSection = TString(option).Atoi();
   while ((pad = (KBPad *) iterPads.Next())) 
   {
-    if(selectSection != -1 && selectSection != pad -> GetSection())
+    if (selectSection != -1 && selectSection != pad -> GetSection())
+      continue;
+
+    if (pad -> GetPadID() == -1)
       continue;
 
     auto corners = pad -> GetPadCorners();
@@ -525,23 +535,18 @@ TCanvas *LHPadPlaneRPad::GetCanvas(Option_t *)
   return fCanvas;
 }
 
-KBPad *LHPadPlaneRPad::AddPad(Int_t section, Int_t row, Int_t layer, Double_t i, Double_t j)
+KBPad *LHPadPlaneRPad::NewPad(Int_t s, Int_t r, Int_t l)
 {
-  KBPad *pad = new KBPad();
-  pad -> SetPosition(i, j);
-  pad -> SetSectionRowLayer(section, row, layer);
+  auto pad = new KBPad();
+  pad -> SetSectionRowLayer(s, r, l);
   fChannelArray -> Add(pad);
-
   return pad;
 }
 
-void LHPadPlaneRPad::MapPad(KBPad *pad)
+void LHPadPlaneRPad::SetNeighborPads(KBPad *pad0, KBPad *pad1)
 {
-  std::vector<Int_t> key;
-  key.push_back(pad -> GetSection());
-  key.push_back(pad -> GetRow());
-  key.push_back(pad -> GetLayer());
-  fPadMap.insert(std::pair<std::vector<Int_t>, Int_t>(key,pad->GetPadID()));
+  pad0 -> AddNeighborPad(pad1);
+  pad1 -> AddNeighborPad(pad0);
 }
 
 Int_t LHPadPlaneRPad::FindSection(Double_t i, Double_t j)

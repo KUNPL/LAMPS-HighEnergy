@@ -27,8 +27,8 @@ class LHPadPlaneRPad : public KBPadPlane
     virtual TCanvas *GetCanvas(Option_t *optiont = "");
 
   private:
-    KBPad *AddPad(Int_t section, Int_t layer, Int_t row, Double_t i, Double_t j);
-    void MapPad(KBPad *pad);
+    KBPad *NewPad(Int_t s, Int_t r, Int_t l);
+    void SetNeighborPads(KBPad *pad0, KBPad *pad1);
     Int_t FindSection(Double_t i, Double_t j);
 
   private:
@@ -42,6 +42,7 @@ class LHPadPlaneRPad : public KBPadPlane
     Double_t fYPPMin = 92.64;
     Double_t fYPPMax = 499.75;
     Double_t fWPPBot = 76.2;
+    Double_t fPadAreaLL = 3;
 
     Double_t fRMin = 0;
     Double_t fRMax = 0;
