@@ -1,4 +1,4 @@
-/run/SetOutputFile     $KEBIPATH/data/lamps.mc.root
+/run/SetOutputFile     $KEBIPATH/data/lamps2.mc.root
 /run/SetGeneratorFile  $KEBIPATH/input/IQMD_short.gen
 
 /run/setCutForAGivenParticle e- 100. mm

@@ -11,7 +11,6 @@ void eve(TString name = "last")
   auto run = new KBRun();
   run -> SetInputFile(name);
   run -> SetTag("eve");
-  run -> AddParameterFile("lamps.par");
   run -> AddDetector(new LHTpc());
   run -> Init();
   run -> SetGeoTransparency(80);

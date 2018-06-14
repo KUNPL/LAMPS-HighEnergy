@@ -26,7 +26,10 @@ int main(int argc, char** argv)
   physicsList -> RegisterPhysics(new G4StepLimiterPhysics());
 
   runManager -> SetUserInitialization(physicsList);
-  runManager -> SetParameterContainer("lamps.par");
+  if (argc >= 2)
+    runManager -> SetParameterContainer(argv[2]);
+  else
+    runManager -> SetParameterContainer("lamps.par");
   runManager -> SetUserInitialization(new LHDetectorConstruction());
   runManager -> SetUserAction(new KBPrimaryGeneratorAction());
   runManager -> SetUserAction(new KBEventAction());

@@ -1,3 +1,4 @@
+#include "KBParameterContainer.hh"
 #include "LHDetectorConstruction.hh"
 
 #include "KBG4RunManager.hh"
@@ -29,10 +30,12 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 {
   auto runManager = (KBG4RunManager *) G4RunManager::GetRunManager();
 
-  G4double tpcInnerRadius = 150.;
-  G4double tpcOuterRadius = 500.;
-  G4double tpcLength = 1200.;
-  G4double tpcZOffset = 300.;
+  auto par = runManager -> GetParameterContainer();
+
+  G4double tpcInnerRadius = par -> GetParDouble("rMinTPC");
+  G4double tpcOuterRadius = par -> GetParDouble("rMaxTPC");
+  G4double tpcLength = par -> GetParDouble("tpcLength");
+  G4double tpcZOffset = par -> GetParDouble("zOffset");
 
   G4NistManager *nist = G4NistManager::Instance();
   G4double STPTemperature = 273.15;

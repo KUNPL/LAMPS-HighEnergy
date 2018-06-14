@@ -18,7 +18,7 @@ bool LHTpc::BuildGeometry()
 
   auto rMinTPC = fPar -> GetParDouble("rMinTPC");
   auto rMaxTPC = fPar -> GetParDouble("rMaxTPC");
-  auto   dzTPC = fPar -> GetParDouble("dzTPC");
+  auto tpcLength = fPar -> GetParDouble("tpcLength");
   auto zOffset = fPar -> GetParDouble("zOffset");
 
   TGeoMedium *p10 = new TGeoMedium("p10", 1, new TGeoMaterial("p10"));
@@ -30,7 +30,7 @@ bool LHTpc::BuildGeometry()
   TGeoVolume *tpc = new TGeoVolumeAssembly("TPC");
   TGeoTranslation *offTPC = new TGeoTranslation("TPC offset",0,0,zOffset);
 
-  TGeoVolume *gas = fGeoManager -> MakeTube("gas",p10,rMinTPC,rMaxTPC,dzTPC/2);
+  TGeoVolume *gas = fGeoManager -> MakeTube("gas",p10,rMinTPC,rMaxTPC,tpcLength/2);
   gas -> SetVisibility(true);
   gas -> SetLineColor(kBlue-10);
   gas -> SetTransparency(90);

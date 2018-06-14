@@ -9,7 +9,7 @@ tbTime  d 40   # [ns]
 worldSize d  1000.
 rMinTPC   d  150.
 rMaxTPC   d  500.
-dzTPC     d  1200.
+tpcLength d  1200.
 zOffset   d  300.
 
 ### PSA
@@ -44,10 +44,10 @@ tpcNPadPlanes     i 1
   tpcPadPlaneK0   d 900.
 
 ### LHTrackFinder parameters
-LHTF_defaultScale d 3.  # 2.5
-LHTF_trackWCutLL  d 10. # 4.
-LHTF_trackWCutHL  d 24. # 10.
-LHTF_trackHCutLL  d 10. # 2.
-LHTF_trackHCutHL  d 24. # 4.
+LHTF_defaultScale d 2.5 # 2.5
+LHTF_trackWCutLL  d 5.  # 4.
+LHTF_trackWCutHL  d 15. # 10.
+LHTF_trackHCutLL  d 5.  # 2.
+LHTF_trackHCutHL  d 15. # 4.
 
 PadPlaneType s LHPadPlane

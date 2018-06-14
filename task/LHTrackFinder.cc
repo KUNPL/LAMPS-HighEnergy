@@ -31,7 +31,7 @@ bool LHTrackFinder::Init()
     return false;
   }
 
-  fFitter = new KBHelixTrackFitter();
+  fFitter = KBHelixTrackFitter::GetFitter();
   fFitter -> SetReferenceAxis(fReferenceAxis);
 
   return true;
@@ -262,7 +262,7 @@ bool LHTrackFinder::TrackExtrapolation(KBHelixTrack *track)
   bool buildHead = true;
   Double_t extrapolationLength = 0;
   while (AutoBuildByExtrapolation(track, buildHead, extrapolationLength)) {
-    if (count++ > 100)
+    if (++count > 200)
       break;
   }
 
@@ -270,7 +270,7 @@ bool LHTrackFinder::TrackExtrapolation(KBHelixTrack *track)
   buildHead = !buildHead;
   extrapolationLength = 0;
   while (AutoBuildByExtrapolation(track, buildHead, extrapolationLength)) {
-    if (count++ > 100)
+    if (++count > 200)
       break;
   }
 
@@ -285,7 +285,11 @@ bool LHTrackFinder::TrackExtrapolation(KBHelixTrack *track)
 bool LHTrackFinder::TrackConfirmation(KBHelixTrack *track)
 {
   bool tailToHead = false;
-  if (track -> PositionAtTail().Z() > track -> PositionAtHead().Z())
+  //if (track -> PositionAtTail().Z() > track -> PositionAtHead().Z())
+  KBVector3 pTail(track -> PositionAtTail(), fReferenceAxis);
+  KBVector3 pHead(track -> PositionAtHead(), fReferenceAxis);
+
+  if (pHead.K() > pHead.K())
     tailToHead = true;
 
   for (UInt_t iBad = 0; iBad < fBadHits -> size(); ++iBad)
@@ -331,14 +335,33 @@ Double_t LHTrackFinder::Correlate(KBHelixTrack *track, KBHit *hit, Double_t rSca
   if (trackLength < 500.)
     scale = scale + (500. - trackLength)/500.;
 
+  /*
+  auto direction = track->Momentum().Unit();
+  Double_t dot = abs(direction.Dot(KBVector3(fReferenceAxis,0,0,1).GetXYZ()));
+  auto a = 1.;
+  auto b = 1.;
+  if (dot > .5) {
+     a = (2*(dot-.5)+1); //
+     b = (2*(dot-.5)+1); //
+  }
+  auto trackHCutLL = a*fTrackHCutLL;
+  auto trackHCutHL = a*fTrackHCutHL;
+  auto trackWCutLL = b*fTrackWCutLL;
+  auto trackWCutHL = b*fTrackWCutHL;
+  */
+  auto trackHCutLL = fTrackHCutLL;
+  auto trackHCutHL = fTrackHCutHL;
+  auto trackWCutLL = fTrackWCutLL;
+  auto trackWCutHL = fTrackWCutHL;
+
   Double_t rmsWCut = track -> GetRMSW();
-  if (rmsWCut < fTrackWCutLL) rmsWCut = fTrackWCutLL;
-  if (rmsWCut > fTrackWCutHL) rmsWCut = fTrackWCutHL;
+  if (rmsWCut < trackWCutLL) rmsWCut = trackWCutLL;
+  if (rmsWCut > trackWCutHL) rmsWCut = trackWCutHL;
   rmsWCut = scale * rmsWCut;
 
   Double_t rmsHCut = track -> GetRMSH();
-  if (rmsHCut < fTrackHCutLL) rmsHCut = fTrackHCutLL;
-  if (rmsHCut > fTrackHCutHL) rmsHCut = fTrackHCutHL;
+  if (rmsHCut < trackHCutLL) rmsHCut = trackHCutLL;
+  if (rmsHCut > trackHCutHL) rmsHCut = trackHCutHL;
   rmsHCut = scale * rmsHCut;
 
   TVector3 qHead = track -> Map(track -> PositionAtHead());
@@ -455,13 +478,13 @@ bool LHTrackFinder::ConfirmHits(KBHelixTrack *track, bool &tailToHead)
   Int_t numHits = trackHits -> size();
 
   TVector3 q, m;
-  Double_t lPre = track -> ExtrapolateByMap(trackHits->at(numHits-1)->GetPosition(), q, m);
+  //Double_t lPre = track -> ExtrapolateByMap(trackHits->at(numHits-1)->GetPosition(), q, m);
 
   Double_t extrapolationLength = 10.;
   for (Int_t iHit = 1; iHit < numHits; iHit++) 
   {
     KBHit *trackHit = trackHits -> at(numHits-iHit-1);
-    Double_t lCur = track -> ExtrapolateByMap(trackHit->GetPosition(), q, m);
+    //Double_t lCur = track -> ExtrapolateByMap(trackHit->GetPosition(), q, m);
 
     Double_t quality = Correlate(track, trackHit);
 
@@ -472,11 +495,15 @@ bool LHTrackFinder::ConfirmHits(KBHelixTrack *track, bool &tailToHead)
       fFitter -> Fit(track);
       if (helicity != track -> Helicity())
         tailToHead = !tailToHead;
+
+      continue;
     }
 
+    /*
     Double_t dLength = abs(lCur - lPre);
     extrapolationLength = 10;
     while(dLength > 0 && AutoBuildByInterpolation(track, tailToHead, extrapolationLength, 1)) { dLength -= 10; }
+    */
   }
 
   extrapolationLength = 0;
@@ -505,7 +532,9 @@ bool LHTrackFinder::AutoBuildByInterpolation(KBHelixTrack *track, bool &tailToHe
 
 bool LHTrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &tailToHead, Double_t &extrapolationLength, Double_t rScale)
 {
-  if (fPadPlane -> IsInBoundary(p.X(), p.Z()) == false)
+  //if (fPadPlane -> IsInBoundary(p.X(), p.Z()) == false)
+  KBVector3 p2(p,fReferenceAxis);
+  if (fPadPlane -> IsInBoundary(p2.I(), p2.J()) == false)
     return false;
 
   Int_t helicity = track -> Helicity();
@@ -515,7 +544,7 @@ bool LHTrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &t
     rms = 25;
 
   Int_t range = Int_t(rms/8);
-  TVector3 q(p.Z(), p.X(), p.Y());
+  TVector2 q(p2.I(), p2.J());
   fPadPlane -> PullOutNeighborHits(q, range, fCandHits);
 
   Int_t numCandHits = fCandHits -> size();
