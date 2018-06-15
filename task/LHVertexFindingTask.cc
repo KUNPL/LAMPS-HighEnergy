@@ -24,6 +24,11 @@ bool LHVertexFindingTask::Init()
   fVertexArray = new TClonesArray("KBVertex");
   run -> RegisterBranch("Vertex", fVertexArray, fPersistency);
 
+  TString  axis = run -> GetParameterContainer() -> GetParString("tpcBFieldAxis");
+       if (axis == "x") fReferenceAxis = KBVector3::kX;
+  else if (axis == "y") fReferenceAxis = KBVector3::kY;
+  else if (axis == "z") fReferenceAxis = KBVector3::kZ;
+
   return true;
 }
 
@@ -38,54 +43,61 @@ void LHVertexFindingTask::Exec(Option_t*)
 
   KBVertex *vertex = new ((*fVertexArray)[0]) KBVertex();
 
-  Double_t y0 = 300;
-  Double_t dy = 100;
-  Double_t s0 = 1.e8;
+  const Int_t numSamples = 10;
+  Double_t sLeast = 1.e8;
+  Double_t kAtSLeast = 0;
+  Double_t sTest = 0;
+  Int_t nIterations = 5;
 
-  const Int_t numSamples = 9;
+  Double_t kArray[10];
+  Double_t dk = (fK2-fK1)/(numSamples-1);
+  for (Int_t iSample = 0; iSample < numSamples; iSample++)
+    kArray[iSample] = dk*iSample + fK1;
 
-  Int_t halfOfSamples = (numSamples)/2;
+  for (Int_t iSample = 0; iSample < numSamples; ++iSample) {
+    Double_t kTest = kArray[iSample];
+    KBVector3 testPosition(fReferenceAxis, 0, 0, kTest);
+    sTest = TestVertexAtK(vertex, testPosition);
 
-  Double_t yArray[numSamples] = {0};
-  for (Int_t iSample = 0; iSample <= numSamples; iSample++)
-    yArray[iSample] = (iSample - halfOfSamples) * dy + y0;
-
-  Int_t nIterations = 4;
+    if (sTest < sLeast) {
+      sLeast = sTest;
+      kAtSLeast = kTest;
+    }
+  }
+  --nIterations;
 
   for (Int_t iSample = 0; iSample <= numSamples; ++iSample) {
-    Double_t y = yArray[iSample];
-    TVector3 v(0, y, 0);
-    Double_t s = TestVertexAtK(vertex, nIterations, v);
-
-    if (s < s0) {
-      s0 = s;
-      y0 = y;
+    Double_t kTest = kArray[iSample];
+    KBVector3 testPosition(fReferenceAxis, 0, 0, kTest);
+    sTest = TestVertexAtK(vertex, testPosition);
+    if (sTest < sLeast) {
+      sLeast = sTest;
+      kAtSLeast = kTest;
     }
   }
 
   while (nIterations > 0) {
-    dy = dy/halfOfSamples;
-    for (Int_t iSample = 0; iSample <= numSamples; iSample++)
-      yArray[iSample] = (iSample - halfOfSamples) * dy + y0;
+    fK1 = kAtSLeast - dk;
+    fK2 = kAtSLeast + dk;
+    dk = (fK2-fK1)/(numSamples-1);
+    for (Int_t iSample = 0; iSample < numSamples; iSample++)
+      kArray[iSample] = dk*iSample + fK1;
 
-    for (Int_t iSample = 0; iSample <= numSamples; ++iSample) {
-      Double_t y = yArray[iSample];
-      TVector3 v(0, y, 0);
-      Double_t s = TestVertexAtK(vertex, nIterations, v);
-
-      if (s < s0) {
-        s0 = s;
-        y0 = y;
+    for (Int_t iSample = 0; iSample < numSamples; ++iSample) {
+      Double_t kTest = kArray[iSample];
+      KBVector3 testPosition(fReferenceAxis, 0, 0, kTest);
+      sTest = TestVertexAtK(vertex, testPosition);
+      if (sTest < sLeast) {
+        sLeast = sTest;
+        kAtSLeast = kTest;
       }
     }
 
     nIterations--;
   }
 
-  TVector3 v(0, y0, 0);
-  TestVertexAtK(vertex, 0, v, true);
-
-  vertex -> SetPosition(v);
+  KBVector3 testPosition(fReferenceAxis, 0, 0, kAtSLeast);
+  sTest = TestVertexAtK(vertex, testPosition, true);
 
   Int_t numTracks = fTrackArray -> GetEntriesFast();
   for (Int_t iTrack = 0; iTrack < numTracks; iTrack++) {
@@ -94,34 +106,37 @@ void LHVertexFindingTask::Exec(Option_t*)
     fTrackFitter -> Fit(track);
   }
 
-  kb_info << "Found vertex at " << Form("(%.1f, %.1f, %.1f)",v.X(),v.Y(),v.Z()) << " with " << vertex -> GetNumTracks() << " tracks" << endl;
+  auto pos = vertex -> GetPosition();
+
+  kb_info << "Found vertex at " << Form("(%.1f, %.1f, %.1f)",pos.X(),pos.Y(),pos.Z()) << " with " << vertex -> GetNumTracks() << " tracks" << endl;
 
   return;
 }
 
-Double_t LHVertexFindingTask::TestVertexAtK(KBVertex *vertex, Int_t itID, TVector3 &v, bool last)
+Double_t LHVertexFindingTask::TestVertexAtK(KBVertex *vertex, KBVector3 testPosition, bool last)
 {
-  Double_t s = 0;
+  Double_t sTest = 0;
   Int_t numUsedTracks = 0;
 
-  v.SetX(0);
-  v.SetZ(0);
+  KBVector3 position = testPosition;
 
   Int_t numTracks = fTrackArray -> GetEntriesFast();
   for (Int_t iTrack = 0; iTrack < numTracks; iTrack++) {
     KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
 
-    TVector3 p;
+    TVector3 xyzOnHelix;
     Double_t alpha;
-    track -> ExtrapolateToPointK(TVector3(0,v.Y(),0), p, alpha);
+    track -> ExtrapolateToPointK(testPosition, xyzOnHelix, alpha);
+    KBVector3 posOnHelix(xyzOnHelix,fReferenceAxis);
 
-    v.SetX((numUsedTracks*v.X() + p.X())/(numUsedTracks+1));
-    v.SetZ((numUsedTracks*v.Z() + p.Z())/(numUsedTracks+1));
+    position.SetI((numUsedTracks*position.I()+posOnHelix.I())/(numUsedTracks+1));
+    position.SetJ((numUsedTracks*position.J()+posOnHelix.J())/(numUsedTracks+1));
 
+    auto dist = (position-posOnHelix).Mag();
     if (numUsedTracks != 0)
-      s = (double)numUsedTracks/(numUsedTracks+1)*s + (v-p).Mag()/numUsedTracks;
+      sTest = (double)numUsedTracks/(numUsedTracks+1)*sTest + dist/numUsedTracks;
 
-    numUsedTracks++;
+    ++numUsedTracks;
 
     if (last) {
       track -> SetParentID(0);
@@ -129,9 +144,10 @@ Double_t LHVertexFindingTask::TestVertexAtK(KBVertex *vertex, Int_t itID, TVecto
     }
   }
 
-  vertex -> AddSSet(KBVSSet(itID, v.Y(), s, numUsedTracks));
+  if (last)
+    vertex -> SetPosition(position.GetXYZ());
 
-  return s;
+  return sTest;
 }
 
 void LHVertexFindingTask::SetVertexPersistency(bool val) { fPersistency = val; }
