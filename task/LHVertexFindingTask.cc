@@ -15,8 +15,6 @@ LHVertexFindingTask::LHVertexFindingTask()
 
 bool LHVertexFindingTask::Init()
 {
-  fTrackFitter = new KBHelixTrackFitter();
-
   KBRun *run = KBRun::GetRun();
 
   fTrackArray = (TClonesArray *) run -> GetBranch("Tracklet");
@@ -43,57 +41,17 @@ void LHVertexFindingTask::Exec(Option_t*)
 
   KBVertex *vertex = new ((*fVertexArray)[0]) KBVertex();
 
-  const Int_t numSamples = 10;
   Double_t sLeast = 1.e8;
   Double_t kAtSLeast = 0;
   Double_t sTest = 0;
-  Int_t nIterations = 5;
 
-  Double_t kArray[10];
-  Double_t dk = (fK2-fK1)/(numSamples-1);
-  for (Int_t iSample = 0; iSample < numSamples; iSample++)
-    kArray[iSample] = dk*iSample + fK1;
-
-  for (Int_t iSample = 0; iSample < numSamples; ++iSample) {
-    Double_t kTest = kArray[iSample];
-    KBVector3 testPosition(fReferenceAxis, 0, 0, kTest);
-    sTest = TestVertexAtK(vertex, testPosition);
-
-    if (sTest < sLeast) {
-      sLeast = sTest;
-      kAtSLeast = kTest;
-    }
-  }
-  --nIterations;
-
-  for (Int_t iSample = 0; iSample <= numSamples; ++iSample) {
-    Double_t kTest = kArray[iSample];
-    KBVector3 testPosition(fReferenceAxis, 0, 0, kTest);
+  for (auto k = -10.; k < 10.; k+=0.1) {
+    KBVector3 testPosition(fReferenceAxis, 0, 0, k);
     sTest = TestVertexAtK(vertex, testPosition);
     if (sTest < sLeast) {
       sLeast = sTest;
-      kAtSLeast = kTest;
+      kAtSLeast = k;
     }
-  }
-
-  while (nIterations > 0) {
-    fK1 = kAtSLeast - dk;
-    fK2 = kAtSLeast + dk;
-    dk = (fK2-fK1)/(numSamples-1);
-    for (Int_t iSample = 0; iSample < numSamples; iSample++)
-      kArray[iSample] = dk*iSample + fK1;
-
-    for (Int_t iSample = 0; iSample < numSamples; ++iSample) {
-      Double_t kTest = kArray[iSample];
-      KBVector3 testPosition(fReferenceAxis, 0, 0, kTest);
-      sTest = TestVertexAtK(vertex, testPosition);
-      if (sTest < sLeast) {
-        sLeast = sTest;
-        kAtSLeast = kTest;
-      }
-    }
-
-    nIterations--;
   }
 
   KBVector3 testPosition(fReferenceAxis, 0, 0, kAtSLeast);
@@ -103,7 +61,7 @@ void LHVertexFindingTask::Exec(Option_t*)
   for (Int_t iTrack = 0; iTrack < numTracks; iTrack++) {
     KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
     track -> DetermineParticleCharge(vertex -> GetPosition());
-    fTrackFitter -> Fit(track);
+    track -> Fit();
   }
 
   auto pos = vertex -> GetPosition();
@@ -118,23 +76,22 @@ Double_t LHVertexFindingTask::TestVertexAtK(KBVertex *vertex, KBVector3 testPosi
   Double_t sTest = 0;
   Int_t numUsedTracks = 0;
 
-  KBVector3 position = testPosition;
+  TVector3 averagePosition(0,0,0);
 
   Int_t numTracks = fTrackArray -> GetEntriesFast();
   for (Int_t iTrack = 0; iTrack < numTracks; iTrack++) {
     KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
 
-    TVector3 xyzOnHelix;
-    Double_t alpha;
-    track -> ExtrapolateToPointK(testPosition, xyzOnHelix, alpha);
-    KBVector3 posOnHelix(xyzOnHelix,fReferenceAxis);
+    auto xyzOnHelix = track -> ExtrapolateTo(testPosition);
+    auto dist = (testPosition.GetXYZ()-xyzOnHelix).Mag();
 
-    position.SetI((numUsedTracks*position.I()+posOnHelix.I())/(numUsedTracks+1));
-    position.SetJ((numUsedTracks*position.J()+posOnHelix.J())/(numUsedTracks+1));
+    if (last && dist > 20)
+      continue;
 
-    auto dist = (position-posOnHelix).Mag();
+    averagePosition += xyzOnHelix;
+
     if (numUsedTracks != 0)
-      sTest = (double)numUsedTracks/(numUsedTracks+1)*sTest + dist/numUsedTracks;
+      sTest = ((Double_t)numUsedTracks)/(numUsedTracks+1)*sTest + dist/numUsedTracks;
 
     ++numUsedTracks;
 
@@ -144,8 +101,24 @@ Double_t LHVertexFindingTask::TestVertexAtK(KBVertex *vertex, KBVector3 testPosi
     }
   }
 
+  averagePosition = (1./(numUsedTracks))*averagePosition;
+
+  if (last) {
+    KBHit *vertex_hit = new KBHit();
+    vertex_hit -> SetPosition(averagePosition);
+    vertex_hit -> SetCharge(4000);
+
+    for (Int_t iTrack = 0; iTrack < numTracks; iTrack++) {
+      KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
+      if (track -> GetParentID() == 0) {
+        track -> AddHit(vertex_hit);
+        track -> Fit();
+      }
+    }
+  }
+
   if (last)
-    vertex -> SetPosition(position.GetXYZ());
+    vertex -> SetPosition(averagePosition);
 
   return sTest;
 }

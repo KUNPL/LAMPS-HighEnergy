@@ -1,7 +1,7 @@
-void mcreco()
+void mcreco(TString name = "lamps2")
 {
   auto run = KBRun::GetRun();
-  run -> SetIOFile("lamps2.mc", "lamps2.mcreco");
+  run -> SetIOFile(name+".mc", name+".mcreco");
   run -> AddDetector(new LHTpc());
   run -> AddParameterFile("lamps2.par");
 
