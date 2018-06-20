@@ -49,10 +49,23 @@ void LHElectronicsTask::Exec(Option_t*)
           break;
 
         out[tb] += in[iTb] * fPulseFunction -> Eval(iTb2);
-        if (out[tb] > 3500.)
-          out[tb] = 3500;
+        if (out[tb] > 4000.)
+          out[tb] = 4000;
       }
     }
+
+    auto saturated = false;
+    Int_t saturatedAt = 100000;
+    for (Int_t iTb = 0; iTb < fNTbs; iTb++) {
+      if (out[iTb] > 3999) {
+        saturated = true;
+        saturatedAt = iTb;
+        break;
+      }
+    }
+    for (Int_t iTb = saturatedAt+10; iTb < fNTbs; iTb++)
+      out[iTb] = 0;
+
     pad -> SetBufferOut(out);
   }
 
