@@ -4,8 +4,6 @@
 #include "KBPadPlane.hh"
 #include "TF1.h"
 
-typedef vector<KBHit*> KBHits;
-
 class LHPadPlaneRPad : public KBPadPlane
 {
   public:

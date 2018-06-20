@@ -2,9 +2,10 @@
 #define LAMPSPADPLANE_HH
 
 #include "KBPadPlane.hh"
+#include "KBTpcHit.hh"
 #include "TF1.h"
 
-typedef vector<KBHit*> KBHits;
+typedef vector<KBTpcHit*> KBTpcHits;
 
 class LHPadPlane : public KBPadPlane
 {
@@ -28,9 +29,10 @@ class LHPadPlane : public KBPadPlane
 
     virtual void ResetHitMap();
     TObjArray *GetInPadArray();
-    KBHit *PullOutNextFreeHitIn();
-    void PullOutNeighborHitsIn(KBHits *hits, KBHits *nbHits);
-    void PullOutNeighborHitsIn(TVector3 p, Int_t range, KBHits *nbHits);
+    KBTpcHit *PullOutNextFreeHitIn();
+    void PullOutNeighborHitsIn(KBTpcHits *hits, KBTpcHits *nbHits);
+    void PullOutNeighborHitsIn(TVector3 p, Int_t range, KBTpcHits *nbHits);
+
 
     Int_t GetNLayerDivision();
     Int_t GetLayerDiv(Int_t idx);

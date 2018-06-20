@@ -104,15 +104,10 @@ Double_t LHVertexFindingTask::TestVertexAtK(KBVertex *vertex, KBVector3 testPosi
   averagePosition = (1./(numUsedTracks))*averagePosition;
 
   if (last) {
-    KBHit *vertex_hit = new KBHit();
-    vertex_hit -> SetPosition(averagePosition);
-    vertex_hit -> SetCharge(4000);
-
     for (Int_t iTrack = 0; iTrack < numTracks; iTrack++) {
       KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
       if (track -> GetParentID() == 0) {
-        track -> AddHit(vertex_hit);
-        track -> Fit();
+        track -> AddHit(vertex);
       }
     }
   }

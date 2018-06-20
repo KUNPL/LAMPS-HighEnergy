@@ -13,8 +13,10 @@
 #include "LHPadPlane.hh"
 
 #include <vector>
+using namespace std;
 
-typedef std::vector<KBHit*> vKBHit;
+typedef vector<KBTpcHit*> KBTpcHits;
+typedef vector<KBHit*> KBHits;
 
 class LHTrackFinder : public KBTrackFinder
 {
@@ -27,7 +29,7 @@ class LHTrackFinder : public KBTrackFinder
     virtual bool Init();
 
     /**
-     * @param in   Array of KBHit
+     * @param in   Array of KBTpcHit
      * @param out  Array of KBTracklet
      */
     virtual void FindTrack(TClonesArray *in, TClonesArray *out);
@@ -39,9 +41,9 @@ class LHTrackFinder : public KBTrackFinder
     bool TrackExtrapolation(KBHelixTrack *track);
     bool TrackConfirmation(KBHelixTrack* track);
 
-    Int_t CheckHitOwner(KBHit *hit);
-    Double_t Correlate(KBHelixTrack *track, KBHit *hit, Double_t scale=1);
-    Double_t CorrelateSimple(KBHelixTrack *track, KBHit *hit);
+    Int_t CheckHitOwner(KBTpcHit *hit);
+    Double_t Correlate(KBHelixTrack *track, KBTpcHit *hit, Double_t scale=1);
+    Double_t CorrelateSimple(KBHelixTrack *track, KBTpcHit *hit);
     bool LengthAlphaCut(KBHelixTrack *track, Double_t dLength);
 
     bool ConfirmHits(KBHelixTrack* track, bool &tailToHead);
@@ -56,9 +58,9 @@ class LHTrackFinder : public KBTrackFinder
     TClonesArray *fTrackArray = nullptr;
     KBHelixTrackFitter *fFitter = nullptr;
 
-    vKBHit *fCandHits = nullptr;
-    vKBHit *fGoodHits = nullptr;
-    vKBHit *fBadHits  = nullptr;
+    KBTpcHits *fCandHits = nullptr;
+    KBTpcHits *fGoodHits = nullptr;
+    KBTpcHits *fBadHits  = nullptr;
 
     Double_t fDefaultScale;
     Double_t fTrackWCutLL;  ///< Track width cut low limit

@@ -4,7 +4,6 @@
 #include "LHTrackFinder.hh"
 
 #include <iostream>
-using namespace std;
 
 ClassImp(LHTrackFinder)
 
@@ -12,9 +11,9 @@ bool LHTrackFinder::Init()
 {
   fPadPlane = (LHPadPlane *) fTpc -> GetPadPlane();
 
-  fCandHits = new vKBHit;
-  fGoodHits = new vKBHit;
-  fBadHits = new vKBHit;
+  fCandHits = new KBTpcHits;
+  fGoodHits = new KBTpcHits;
+  fBadHits = new KBTpcHits;
 
   fDefaultScale = fPar -> GetParDouble("LHTF_defaultScale");
   fTrackWCutLL = fPar -> GetParDouble("LHTF_trackWCutLL");
@@ -94,20 +93,20 @@ void LHTrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
     //if (track -> GetNumHits() < 10) survive = false;
 
     if (survive) {
-      vector<KBHit *> *trackHits = track -> GetHitArray();
+      auto trackHits = track -> GetHitArray();
       Int_t trackID = track -> GetTrackID();
       Int_t numTrackHits = trackHits -> size();
       for (Int_t iTrackHit = 0; iTrackHit < numTrackHits; ++iTrackHit) {
-        KBHit *trackHit = trackHits -> at(iTrackHit);
+        auto trackHit = (KBTpcHit *) trackHits -> at(iTrackHit);
         trackHit -> AddTrackCand(trackID);
         fPadPlane -> AddHit(trackHit);
       }
     }
     else {
-      vector<KBHit *> *trackHits = track -> GetHitArray();
+      auto trackHits = track -> GetHitArray();
       Int_t numTrackHits = trackHits -> size();
       for (Int_t iTrackHit = 0; iTrackHit < numTrackHits; ++iTrackHit) {
-        KBHit *trackHit = trackHits -> at(iTrackHit);
+        auto trackHit = (KBTpcHit *) trackHits -> at(iTrackHit);
         trackHit -> AddTrackCand(-1);
         fPadPlane -> AddHit(trackHit);
       }
@@ -126,7 +125,7 @@ void LHTrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
 
 KBHelixTrack *LHTrackFinder::NewTrack()
 {
-  KBHit *hit = fPadPlane -> PullOutNextFreeHit();
+  KBTpcHit *hit = fPadPlane -> PullOutNextFreeHit();
 #ifdef CHECK_INITIAL_HITS
   if (fCheckHitIndex>0) {
     hit -> Print();
@@ -161,7 +160,7 @@ bool LHTrackFinder::InitTrack(KBHelixTrack *track)
     sort(fCandHits->begin(), fCandHits->end(), KBHitSortByDistanceTo(track->GetMean()));
 
     for (Int_t iHit = 0; iHit < numCandHits; iHit++) {
-      KBHit *candHit = fCandHits -> back();
+      KBTpcHit *candHit = fCandHits -> back();
       fCandHits -> pop_back();
 
       Double_t quality = CorrelateSimple(track, candHit);
@@ -224,7 +223,7 @@ bool LHTrackFinder::TrackContinuum(KBHelixTrack *track)
     sort(fCandHits -> begin(), fCandHits -> end(), KBHitSortCharge());
 
     for (Int_t iHit = 0; iHit < numCandHits; iHit++) {
-      KBHit *candHit = fCandHits -> back();
+      KBTpcHit *candHit = fCandHits -> back();
       fCandHits -> pop_back();
 
       Double_t quality = 0; 
@@ -311,7 +310,7 @@ bool LHTrackFinder::TrackConfirmation(KBHelixTrack *track)
   return true;
 }
 
-Int_t LHTrackFinder::CheckHitOwner(KBHit *hit)
+Int_t LHTrackFinder::CheckHitOwner(KBTpcHit *hit)
 {
   vector<Int_t> *candTracks = hit -> GetTrackCandArray();
   if (candTracks -> size() == 0)
@@ -328,7 +327,7 @@ Int_t LHTrackFinder::CheckHitOwner(KBHit *hit)
   return trackID;
 }
 
-Double_t LHTrackFinder::Correlate(KBHelixTrack *track, KBHit *hit, Double_t rScale)
+Double_t LHTrackFinder::Correlate(KBHelixTrack *track, KBTpcHit *hit, Double_t rScale)
 {
   Double_t scale = rScale * fDefaultScale;
   Double_t trackLength = track -> TrackLength();
@@ -396,7 +395,7 @@ bool LHTrackFinder::LengthAlphaCut(KBHelixTrack *track, Double_t dLength)
   return false;
 }
 
-Double_t LHTrackFinder::CorrelateSimple(KBHelixTrack *track, KBHit *hit)
+Double_t LHTrackFinder::CorrelateSimple(KBHelixTrack *track, KBTpcHit *hit)
 {
   if (hit -> GetNumTrackCands() != 0)
     return 0;
@@ -408,11 +407,11 @@ Double_t LHTrackFinder::CorrelateSimple(KBHelixTrack *track, KBHit *hit)
 
   KBVector3 pos0(hit -> GetPosition(), fReferenceAxis);
 
-  vector<KBHit *> *trackHits = track -> GetHitArray();
+  auto trackHits = track -> GetHitArray();
   bool kcut = false;
   Int_t numTrackHits = trackHits -> size();
   for (Int_t iTrackHit = 0; iTrackHit < numTrackHits; ++iTrackHit) {
-    KBHit *trackHit = trackHits -> at(iTrackHit);
+    auto trackHit = (KBTpcHit *) trackHits -> at(iTrackHit);
     if (row == trackHit -> GetRow() && layer == trackHit -> GetLayer())
       return 0;
     KBVector3 pos1(trackHit -> GetPosition(), fReferenceAxis);
@@ -474,7 +473,7 @@ Double_t LHTrackFinder::CorrelateSimple(KBHelixTrack *track, KBHit *hit)
 bool LHTrackFinder::ConfirmHits(KBHelixTrack *track, bool &tailToHead)
 {
   track -> SortHits(!tailToHead);
-  vector<KBHit *> *trackHits = track -> GetHitArray();
+  auto trackHits = track -> GetHitArray();
   Int_t numHits = trackHits -> size();
 
   TVector3 q, m;
@@ -483,7 +482,7 @@ bool LHTrackFinder::ConfirmHits(KBHelixTrack *track, bool &tailToHead)
   Double_t extrapolationLength = 10.;
   for (Int_t iHit = 1; iHit < numHits; iHit++) 
   {
-    KBHit *trackHit = trackHits -> at(numHits-iHit-1);
+    auto trackHit = (KBTpcHit *) trackHits -> at(numHits-iHit-1);
     //Double_t lCur = track -> ExtrapolateByMap(trackHit->GetPosition(), q, m);
 
     Double_t quality = Correlate(track, trackHit);
@@ -555,7 +554,7 @@ bool LHTrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &t
     sort(fCandHits -> begin(), fCandHits -> end(), KBHitSortCharge());
 
     for (Int_t iHit = 0; iHit < numCandHits; iHit++) {
-      KBHit *candHit = fCandHits -> back();
+      KBTpcHit *candHit = fCandHits -> back();
       fCandHits -> pop_back();
       TVector3 pos = candHit -> GetPosition();
 

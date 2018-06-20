@@ -549,13 +549,13 @@ void LHPadPlane::ResetHitMap()
 
 TObjArray *LHPadPlane::GetInPadArray() { return fInPadArray; }
 
-KBHit *LHPadPlane::PullOutNextFreeHitIn()
+KBTpcHit *LHPadPlane::PullOutNextFreeHitIn()
 {
   if (fFreeInPadIdx == fInPadArray -> GetEntriesFast() - 1)
     return nullptr;
 
   KBPad *pad = (KBPad *) fChannelArray -> At(fFreeInPadIdx);
-  KBHit *hit = pad -> PullOutNextFreeHit();
+  KBTpcHit *hit = pad -> PullOutNextFreeHit();
   if (hit == nullptr) {
     fFreeInPadIdx++;
     return PullOutNextFreeHitIn();
@@ -564,10 +564,10 @@ KBHit *LHPadPlane::PullOutNextFreeHitIn()
   return hit;
 }
 
-void LHPadPlane::PullOutNeighborHitsIn(vector<KBHit*> *hits, vector<KBHit*> *neighborHits)
+void LHPadPlane::PullOutNeighborHitsIn(KBTpcHits *hits, KBTpcHits *neighborHits)
 {
   for (UInt_t iHit = 0; iHit < hits->size(); ++iHit) {
-    KBHit *hit = hits -> at(iHit);
+    KBTpcHit *hit = hits -> at(iHit);
     KBPad *pad = (KBPad *) fChannelArray -> At(hit -> GetPadID());
     vector<KBPad *> *neighbors = pad -> GetNeighborPadArray();
     for (UInt_t iNeighbor = 0; iNeighbor < neighbors->size(); ++iNeighbor) {
@@ -578,7 +578,7 @@ void LHPadPlane::PullOutNeighborHitsIn(vector<KBHit*> *hits, vector<KBHit*> *nei
   }
 }
 
-void LHPadPlane::PullOutNeighborHitsIn(TVector3 p, Int_t range, vector<KBHit*> *neighborHits)
+void LHPadPlane::PullOutNeighborHitsIn(TVector3 p, Int_t range, KBTpcHits *neighborHits)
 {
   vector<KBPad *> neighborsUsed;
   vector<KBPad *> neighborsTemp;
