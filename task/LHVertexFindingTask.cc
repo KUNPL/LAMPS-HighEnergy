@@ -85,7 +85,7 @@ Double_t LHVertexFindingTask::TestVertexAtK(KBVertex *vertex, KBVector3 testPosi
     auto xyzOnHelix = track -> ExtrapolateTo(testPosition);
     auto dist = (testPosition.GetXYZ()-xyzOnHelix).Mag();
 
-    if (last && dist > 20)
+    if (last && dist > 10)
       continue;
 
     averagePosition += xyzOnHelix;

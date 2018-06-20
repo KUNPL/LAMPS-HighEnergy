@@ -51,6 +51,7 @@ class LHTrackFinder : public KBTrackFinder
     bool AutoBuildByInterpolation(KBHelixTrack *track, bool &tailToHead, Double_t &extrapolationLength, Double_t scale);
     bool AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &tailToHead, Double_t &extrapolationLength, Double_t scale=1);
     bool TrackQualityCheck(KBHelixTrack *track);
+    Double_t Continuity(KBHelixTrack *track);
 
   private:
     LHTpc *fTpc = nullptr;

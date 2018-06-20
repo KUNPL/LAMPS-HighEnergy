@@ -277,8 +277,7 @@ bool LHTrackFinder::TrackExtrapolation(KBHelixTrack *track)
     fPadPlane -> AddHit(fBadHits -> at(iBad));
   fBadHits -> clear();
 
-  //return TrackQualityCheck(track);
-  return true;
+  return TrackQualityCheck(track);
 }
 
 bool LHTrackFinder::TrackConfirmation(KBHelixTrack *track)
@@ -586,9 +585,44 @@ bool LHTrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &t
   return true;
 }
 
+Double_t LHTrackFinder::Continuity(KBHelixTrack *track)
+{
+  Int_t numHits = track -> GetNumHits();
+  if (numHits < 2)
+    return -1;
+
+  track -> SortHits();
+
+  Double_t total = 0;
+  Double_t continuous = 0;
+
+  auto trackHits = track -> GetHitArray();
+  auto before = KBVector3(trackHits->at(0)->GetPosition(), fReferenceAxis);
+
+  auto axis1 = fPadPlane -> GetAxis1();
+  auto axis2 = fPadPlane -> GetAxis2();
+
+  for (auto iHit = 1; iHit < numHits; iHit++)
+  {
+    auto current = KBVector3(trackHits->at(iHit)->GetPosition(), fReferenceAxis);
+    auto val1 = current.At(axis1) - before.At(axis1);
+    auto val2 = current.At(axis2) - before.At(axis2);
+
+    auto length = sqrt(val1*val1 + val2*val2);
+
+    total += length;
+    if (length <= 1.2 * fPadPlane -> PadDisplacement())
+      continuous += length;
+
+    before = current;
+  }
+
+  return continuous/total;
+}
+
 bool LHTrackFinder::TrackQualityCheck(KBHelixTrack *track)
 {
-  Double_t continuity = track -> Continuity();
+  Double_t continuity = Continuity(track);
   if (continuity < .6) {
     if (track -> TrackLength() * continuity < 500)
       return false;

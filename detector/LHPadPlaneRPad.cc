@@ -398,7 +398,7 @@ Int_t LHPadPlaneRPad::FindPadID(Double_t i, Double_t j)
 
 Double_t LHPadPlaneRPad::PadDisplacement() const
 {
-  return 10.;
+  return sqrt(fXSpacing*fXSpacing + fYSpacing*fYSpacing);
 }
 
 bool LHPadPlaneRPad::IsInBoundary(Double_t i, Double_t j)
