@@ -3,7 +3,6 @@ void mcreco(TString name = "lamps2")
   auto run = KBRun::GetRun();
   run -> SetIOFile(name+".mc", name+".mcreco");
   run -> AddDetector(new LHTpc());
-  run -> AddParameterFile("lamps2.par");
 
   auto drift = new LHDriftElectronTask();
   drift -> SetPadPersistency(true);
@@ -18,6 +17,7 @@ void mcreco(TString name = "lamps2")
   run -> Add(psa);
   run -> Add(new LHTrackFindingTask());
   run -> Add(new LHVertexFindingTask());
+  run -> Add(new LHMCRecoMatchingTask());
 
   run -> Init();
   run -> Run();

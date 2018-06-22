@@ -1,6 +1,0 @@
-/run/SetOutputFile     $KEBIPATH/data/single_track.mc.root
-/run/SetGeneratorFile  $KEBIPATH/input/IQMD_single.gen
-
-/run/setCutForAGivenParticle e- 100. mm
-
-/run/beamOn 10

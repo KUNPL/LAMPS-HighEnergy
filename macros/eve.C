@@ -11,6 +11,7 @@ void eve(TString name = "last")
   auto run = new KBRun();
   run -> SetInputFile(name);
   run -> SetTag("eve");
+  run -> SetEve("Tracklet");
   run -> AddDetector(new LHTpc());
   run -> Init();
   run -> SetGeoTransparency(80);
