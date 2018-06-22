@@ -32,7 +32,7 @@ bool LHVertexFindingTask::Init()
 
 void LHVertexFindingTask::Exec(Option_t*)
 {
-  fVertexArray -> Delete();
+  fVertexArray -> Clear();
 
   if (fTrackArray -> GetEntriesFast() < 2) {
     kb_warning << "Less than 2 tracks are given. Unable to find vertex." << endl;

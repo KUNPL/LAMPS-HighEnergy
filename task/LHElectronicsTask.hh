@@ -24,6 +24,7 @@ class LHElectronicsTask : public KBTask
     Int_t fNPlanes;
     Int_t fNTbs;
     Double_t feVToADC;
+    Double_t fDynamicRange;
 
     TF1 *fPulseFunction;
 

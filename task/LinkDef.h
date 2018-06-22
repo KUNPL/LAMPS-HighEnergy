@@ -9,5 +9,6 @@
 #pragma link C++ class LHTrackFinder+;
 #pragma link C++ class LHTrackFindingTask+;
 #pragma link C++ class LHVertexFindingTask+;
+#pragma link C++ class LHMCRecoMatchingTask+;
 
 #endif

@@ -21,6 +21,7 @@ bool LHElectronicsTask::Init()
   fNPlanes = det -> GetNPlanes();
   fNTbs = par -> GetParInt("nTbs");
   feVToADC = par -> GetParDouble("eVToADC");
+  fDynamicRange = par -> GetParDouble("dynamicRange");
 
   fPadArray = (TClonesArray *) run -> GetBranch("Pad");
 
@@ -49,15 +50,15 @@ void LHElectronicsTask::Exec(Option_t*)
           break;
 
         out[tb] += in[iTb] * fPulseFunction -> Eval(iTb2);
-        if (out[tb] > 4000.)
-          out[tb] = 4000;
+        if (out[tb] > fDynamicRange)
+          out[tb] = fDynamicRange;
       }
     }
 
     auto saturated = false;
     Int_t saturatedAt = 100000;
     for (Int_t iTb = 0; iTb < fNTbs; iTb++) {
-      if (out[iTb] > 3999) {
+      if (out[iTb] > fDynamicRange) {
         saturated = true;
         saturatedAt = iTb;
         break;
