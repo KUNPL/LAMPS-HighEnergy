@@ -25,6 +25,7 @@ tpcGEMDataFile    s  $KEBIPATH/input/tripleGEM.root
 
 ### KBDriftElectron
 eVToADC d 0.0002
+dynamicRange d 1000000
 
 ### LAPadPlane
 ppNLayerDivision  i 2
@@ -59,3 +60,4 @@ YPPMin      d  92.64
 YPPMax      d  499.75
 WPPBottom   d  76.2
 PadAreaLL   d  4
+removeCuttedPad b false

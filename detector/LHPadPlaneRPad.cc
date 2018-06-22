@@ -34,6 +34,7 @@ bool LHPadPlaneRPad::Init()
   fYPPMax = fPar -> GetParDouble("YPPMax");
   fWPPBot = fPar -> GetParDouble("WPPBottom");
   fPadAreaLL = fPar -> GetParDouble("PadAreaLL");
+  fRemoveCuttedPad = fPar -> GetParBool("removeCuttedPad");
 
   fTanPi1o8 = TMath::Tan(TMath::Pi()*1./8.);
   fTanPi3o8 = TMath::Tan(TMath::Pi()*3./8.);
@@ -51,8 +52,6 @@ bool LHPadPlaneRPad::Init()
 
   fXSpacing = fPadGap + fPadWid;
   fYSpacing = fPadGap + fPadHei;
-
-  ////////////////////////////////////////////////////////////////////////////////////
 
   for (Int_t section = 0; section < 8; section++)
   {
@@ -97,6 +96,13 @@ bool LHPadPlaneRPad::Init()
           else if (yPadTop < fFuncXRightBound->Eval(xPadOut)) cuttedTo3 = true;
           else if (yPadBot < fFuncXRightBound->Eval(xPadInn)) cuttedTo4 = true;
           else if (yPadBot < fFuncXRightBound->Eval(xPadOut)) cuttedTo5 = true;
+
+          if (fRemoveCuttedPad && (cuttedTo3 || cuttedTo4 || cuttedTo5)) {
+            if (section == 0)
+              fHalfRowMax.push_back(row-1);
+            breakFromRow = true;
+            break;
+          }
 
           xPadInn = pm*xPadInn;
           xPadOut = pm*xPadOut;

@@ -59,6 +59,8 @@ class LHPadPlaneRPad : public KBPadPlane
     Double_t fXSpacing;
     Double_t fYSpacing;
 
+    Bool_t fRemoveCuttedPad = false;
+
   ClassDef(LHPadPlaneRPad, 1)
 };
 
