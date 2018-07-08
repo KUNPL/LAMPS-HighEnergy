@@ -42,6 +42,8 @@ class LHDriftElectronTask : public KBTask
     Int_t fNTbs;
     Double_t fTbTime;
 
+    Double_t fSelectedTrackID = -1;
+
   ClassDef(LHDriftElectronTask, 1)
 };
 
