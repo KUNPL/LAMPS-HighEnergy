@@ -1,5 +1,7 @@
 //#define PRINT_PROCESS
 //#define PULLIN
+//#define SINGlETRACK_DEBUGGER
+//#define CONTINUITY_DEBUGGER
 
 #include "LHTrackFinder.hh"
 
@@ -78,11 +80,17 @@ void LHTrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
     }
 #else
     if (InitTrack(track))
+    {
+      TrackContinuum(track);
+      survive = true;
+    }
+      /*
       if (TrackContinuum(track))
         if (TrackExtrapolation(track)) {
           TrackConfirmation(track);
           survive = true;
         }
+        */
 #endif
 
     Int_t numBadHits = fBadHits -> size();
@@ -209,6 +217,11 @@ bool LHTrackFinder::InitTrack(KBHelixTrack *track)
 
 bool LHTrackFinder::TrackContinuum(KBHelixTrack *track)
 {
+
+#ifdef SINGlETRACK_DEBUGGER
+  kb_warning << "[TrackContinuum] Building Track:" << track -> GetTrackID() << endl;
+#endif
+
 #ifdef PULLIN
   fPadPlane -> PullOutNeighborHitsIn(fGoodHits, fCandHits);
 #else
@@ -222,6 +235,9 @@ bool LHTrackFinder::TrackContinuum(KBHelixTrack *track)
   {
     sort(fCandHits -> begin(), fCandHits -> end(), KBHitSortCharge());
 
+#ifdef SINGlETRACK_DEBUGGER
+  kb_warning << "Number of candidates: " << numCandHits << endl;
+#endif
     for (Int_t iHit = 0; iHit < numCandHits; iHit++) {
       KBTpcHit *candHit = fCandHits -> back();
       fCandHits -> pop_back();
@@ -234,8 +250,15 @@ bool LHTrackFinder::TrackContinuum(KBHelixTrack *track)
         fGoodHits -> push_back(candHit);
         track -> AddHit(candHit);
         fFitter -> Fit(track);
-      } else
+#ifdef SINGlETRACK_DEBUGGER
+        kb_warning << "Hit:" << iHit << " Quality = " << quality << " is good. # of Hits = " << track -> GetNumHits() << endl;
+#endif
+      } else {
         fBadHits -> push_back(candHit);
+#ifdef SINGlETRACK_DEBUGGER
+        kb_error << "Hit:" << iHit << " Quality = " << quality << " is bad." << endl;
+#endif
+      }
     }
 
 #ifdef PULLIN
@@ -588,6 +611,9 @@ bool LHTrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &t
 Double_t LHTrackFinder::Continuity(KBHelixTrack *track)
 {
   Int_t numHits = track -> GetNumHits();
+#ifdef CONTINUITY_DEBUGGER
+  kb_warning << "Checking continuity for Track:" << track -> GetTrackID() << " (# of hits = " << numHits << ")" << endl;
+#endif
   if (numHits < 2)
     return -1;
 
@@ -596,25 +622,43 @@ Double_t LHTrackFinder::Continuity(KBHelixTrack *track)
   Double_t total = 0;
   Double_t continuous = 0;
 
+  TVector3 qPre, mPre, qCur, mCur; // I need q(position on helix)
+
+  KBVector3 kqPre;
+  KBVector3 kqCur;
+
   auto trackHits = track -> GetHitArray();
-  auto before = KBVector3(trackHits->at(0)->GetPosition(), fReferenceAxis);
+  auto pPre = trackHits->at(0)->GetPosition();
+  track -> ExtrapolateByMap(pPre, qPre, mPre);
+  kqPre = KBVector3(qPre,fReferenceAxis);
 
   auto axis1 = fPadPlane -> GetAxis1();
   auto axis2 = fPadPlane -> GetAxis2();
 
   for (auto iHit = 1; iHit < numHits; iHit++)
   {
-    auto current = KBVector3(trackHits->at(iHit)->GetPosition(), fReferenceAxis);
-    auto val1 = current.At(axis1) - before.At(axis1);
-    auto val2 = current.At(axis2) - before.At(axis2);
+    auto pCur = trackHits->at(iHit)->GetPosition();
+    track -> ExtrapolateByMap(pCur, qCur, mCur);
+
+    kqCur = KBVector3(qCur,fReferenceAxis);
+
+    auto val1 = kqCur.At(axis1) - kqPre.At(axis1);
+    auto val2 = kqCur.At(axis2) - kqPre.At(axis2);
 
     auto length = sqrt(val1*val1 + val2*val2);
 
     total += length;
+#ifdef CONTINUITY_DEBUGGER
+    kb_warning << "length between Hit:" << iHit << ", Hit:" << iHit-1 << " is " << length << endl;
+#endif
     if (length <= 1.2 * fPadPlane -> PadDisplacement())
       continuous += length;
 
-    before = current;
+#ifdef CONTINUITY_DEBUGGER
+    kb_warning << continuous << " / " << total << endl;
+#endif
+
+    kqPre = kqCur;
   }
 
   return continuous/total;
