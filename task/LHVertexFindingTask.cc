@@ -32,7 +32,7 @@ bool LHVertexFindingTask::Init()
 
 void LHVertexFindingTask::Exec(Option_t*)
 {
-  fVertexArray -> Clear();
+  fVertexArray -> Clear("C");
 
   if (fTrackArray -> GetEntriesFast() < 2) {
     kb_warning << "Less than 2 tracks are given. Unable to find vertex." << endl;
@@ -60,8 +60,8 @@ void LHVertexFindingTask::Exec(Option_t*)
   Int_t numTracks = fTrackArray -> GetEntriesFast();
   for (Int_t iTrack = 0; iTrack < numTracks; iTrack++) {
     KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
-    track -> DetermineParticleCharge(vertex -> GetPosition());
     track -> Fit();
+    track -> DetermineParticleCharge(vertex -> GetPosition());
   }
 
   auto pos = vertex -> GetPosition();
