@@ -94,12 +94,10 @@ void LHMCRecoMatchingTask::Exec(Option_t*)
         auto momReco = reco -> GetRecoMomentum();
 
         auto momReco2 = momReco;
-        //momReco2.SetZ(0);
-        momReco2.Unit();
+        momReco2 = momReco2.Unit();
 
         auto momMC2 = momMC;
-        //momMC2.SetZ(0);
-        momMC2.Unit();
+        momMC2 = momMC2.Unit();
         auto v = (momMC2.Dot(momReco2));
 
         if (v > 1 - cut && bestMatchingV < v) {
