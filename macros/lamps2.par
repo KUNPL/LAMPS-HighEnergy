@@ -18,17 +18,13 @@ zOffset   d  300.
 ### PSA
 ADCThreshold d 10
 
-### KBDriftElectron
-gasDriftVelocity  d  0.0542411  # [mm/ns]
-gasCoefLongDiff   d  0.115461
-gasCoefTranDiff   d  0.0662528
-gasEIonize        d  2.62e-05   # ionization energy in gas [MeV]
-nElInCluster      i  10000  # number of electrons in electron cluster (related to speed of LADriftElectronTask)
-tpcGEMDataFile    s  $KEBIPATH/input/tripleGEM.root
+garPar f $KEBIPATH/input/p20.par
 
 ### KBDriftElectron
 eVToADC d 0.0002
 dynamicRange d 1000000
+
+#selectMCTrack i 143 # comment out to digitize single track
 
 ### LAPadPlane
 ppNLayerDivision  i 2

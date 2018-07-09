@@ -1,7 +1,7 @@
-void reco()
+void reco(TString name = "lamps2")
 {
-  auto run = new KBRun();
-  run -> SetIOFile("lamps.digi", "lamps.reco");
+  auto run = KBRun::GetRun();
+  run -> SetIOFile(name+".digi", name+".reco");
   run -> AddDetector(new LHTpc());
 
   auto psa = new KBPSATask();
@@ -13,5 +13,4 @@ void reco()
 
   run -> Init();
   run -> Run();
-  //run -> RunInRange(3,6);
 }
