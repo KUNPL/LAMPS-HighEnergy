@@ -6,12 +6,13 @@ void nx(Int_t eventID = -1) {
   cout << "Event " << fEventID << endl;
 }
 
-void eve(TString name = "last")
+void eve(TString name = "last", TString opt = "")
+//void eve(TString name = "lamps2.mc", TString opt = "MCTrack")
 {
   auto run = new KBRun();
   run -> SetInputFile(name);
   run -> SetTag("eve");
-  run -> SetEve("Tracklet");
+  run -> SetEve(opt);
   run -> AddDetector(new LHTpc());
   run -> Init();
   run -> SetGeoTransparency(80);

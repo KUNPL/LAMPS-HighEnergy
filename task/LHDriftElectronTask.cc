@@ -43,6 +43,9 @@ bool LHDriftElectronTask::Init()
   fNTbs = par -> GetParInt("nTbs");
   fTbTime = par -> GetParDouble("tbTime");
 
+  if (par -> CheckPar("selectMCTrack"))
+    fSelectedTrackID = par -> GetParInt("selectMCTrack");
+
   fPadArray = new TClonesArray("KBPad");
   run -> RegisterBranch("Pad", fPadArray, fPersistency);
 
@@ -55,9 +58,11 @@ void LHDriftElectronTask::Exec(Option_t*)
   for (Int_t iPlane = 0; iPlane < fNPlanes; iPlane++)
     fTpc -> GetPadPlane(iPlane) -> Clear();
 
-  Int_t nMCSteps = fMCStepArray -> GetEntries();
-  for (Int_t iStep = 0; iStep < nMCSteps; iStep++) {
+  Long64_t nMCSteps = fMCStepArray -> GetEntries();
+  for (Long64_t iStep = 0; iStep < nMCSteps; ++iStep) {
     KBMCStep* step = (KBMCStep*) fMCStepArray -> At(iStep);
+    if (fSelectedTrackID != -1 && fSelectedTrackID != step -> GetTrackID())
+      continue;
 
     Double_t xMC = step -> GetX();
     Double_t yMC = step -> GetY();
@@ -125,7 +130,11 @@ void LHDriftElectronTask::Exec(Option_t*)
       padSave -> CopyPadData(pad);
       idx++;
     }
-    kb_info << "Number of fired pads in plane-" << iPlane << ": " << idx - idxLast << endl;
+
+    if (fSelectedTrackID != -1)
+      kb_info << "From selected MCTrack:" << fSelectedTrackID << ", Number of fired pads in plane-" << iPlane << ": " << idx - idxLast << endl;
+    else
+      kb_info << "Number of fired pads in plane-" << iPlane << ": " << idx - idxLast << endl;
     idxLast = idx;
   }
   

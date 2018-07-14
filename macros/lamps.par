@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 G4InputFile   s  $KEBIPATH/input/IQMD_Soft_250_1000.gen
 G4OutputFile  s  $KEBIPATH/data/dummy.mc.root
+=======
+G4InputFile   s  $KEBIPATH/input/IQMD_short.gen
+G4OutputFile  s  $KEBIPATH/data/lamps2.mc.root
+>>>>>>> 3e1634e482aa55006524da6d0d86eff44f2eaf6b
 
 tpcBFieldAxis  s z  # axis of B-field direction
 tpcEFieldAxis  s z  # axis of E-field direction
@@ -28,6 +33,7 @@ tpcGEMDataFile    s  $KEBIPATH/input/tripleGEM.root
 
 ### KBDriftElectron
 eVToADC d 0.0002
+dynamicRange d 1000000
 
 ### LAPadPlane
 ppNLayerDivision  i 2
