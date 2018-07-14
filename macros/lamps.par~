@@ -1,6 +1,3 @@
-G4InputFile   s  $KEBIPATH/input/IQMD_Soft_250_1000.gen
-G4OutputFile  s  $KEBIPATH/data/lamps2.mc.root
-
 tpcBFieldAxis  s z  # axis of B-field direction
 tpcEFieldAxis  s z  # axis of E-field direction
 tpcDriftAxis   s z  # direction of electric field
@@ -10,7 +7,7 @@ tbTime  d 40   # [ns]
 
 ### Tpc
 worldSize d  1000.
-rMinTPC   d  100.
+rMinTPC   d  150.
 rMaxTPC   d  500.
 tpcLength d  1200.
 zOffset   d  300.
@@ -28,7 +25,6 @@ tpcGEMDataFile    s  $KEBIPATH/input/tripleGEM.root
 
 ### KBDriftElectron
 eVToADC d 0.0002
-dynamicRange d 1000000
 
 ### LAPadPlane
 ppNLayerDivision  i 2
@@ -54,13 +50,4 @@ LHTF_trackWCutHL  d 15. # 10.
 LHTF_trackHCutLL  d 5.  # 2.
 LHTF_trackHCutHL  d 15. # 4.
 
-PadPlaneType s LHPadPlaneRPad
-
-PadGap      d  0.5
-PadWidth    d  3.
-PadHeight   d  10.
-YPPMin      d  92.64
-YPPMax      d  499.75
-WPPBottom   d  76.2
-PadAreaLL   d  4
-removeCuttedPad b false
+PadPlaneType s LHPadPlane

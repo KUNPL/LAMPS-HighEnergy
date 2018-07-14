@@ -36,6 +36,7 @@ int main(int argc, char** argv)
   runManager -> SetUserAction(new KBSteppingAction());
   runManager -> SetUserAction(new KBTrackingAction());
   runManager -> Initialize();
+  return 0;
 
   G4UImanager* uiManager = G4UImanager::GetUIpointer();
   if (argc != 1) {

@@ -5,7 +5,7 @@ void mcreco(TString name = "lamps2")
   run -> AddDetector(new LHTpc());
 
   auto drift = new LHDriftElectronTask();
-  drift -> SetPadPersistency(false);
+  drift -> SetPadPersistency(true);
 
   auto electronics = new LHElectronicsTask();
 
