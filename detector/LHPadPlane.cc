@@ -246,6 +246,7 @@ Int_t LHPadPlane::FindPadID(Int_t section, Int_t row, Int_t layer)
 Int_t LHPadPlane::FindPadID(Double_t i, Double_t j)
 {
   Int_t section = FindSection(i,j);
+  int a = 0;
 
   Double_t xRot =  i*fCosPiNo4[section] + j*fSinPiNo4[section];
   Double_t yRot = -i*fSinPiNo4[section] + j*fCosPiNo4[section];

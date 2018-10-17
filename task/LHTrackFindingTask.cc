@@ -17,7 +17,7 @@ bool LHTrackFindingTask::Init()
   KBRun *run = KBRun::GetRun();
   KBParameterContainer *par = run -> GetParameterContainer();
 
-  fHitArray = (TClonesArray *) run -> GetBranch("Hit");
+  fHitArray = (TClonesArray *) run -> GetBranch("HitCluster");
 
   fTrackArray = new TClonesArray("KBHelixTrack");
   run -> RegisterBranch("Tracklet", fTrackArray, fPersistency);

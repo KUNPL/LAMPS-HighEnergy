@@ -6,7 +6,7 @@ void nx(Int_t eventID = -1) {
   cout << "Event " << fEventID << endl;
 }
 
-void eve(TString name = "last", TString opt = "")
+void eve(TString name = "lamps2.mc", TString opt = "")
 //void eve(TString name = "lamps2.mc", TString opt = "MCTrack")
 {
   auto run = new KBRun();

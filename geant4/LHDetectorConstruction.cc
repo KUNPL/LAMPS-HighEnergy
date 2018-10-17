@@ -52,9 +52,10 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   matMethaneGas -> AddElement(elementH, 4);
   matMethaneGas -> AddElement(elementC, 1);
 
-  G4double densityP10 = .9*densityArGas + .1*densityMethane;
-  G4Material *matP10 = new G4Material("matP10", densityP10, 2, kStateGas, labTemperature); matP10 -> AddMaterial(matArGas, 0.9*densityArGas/densityP10);
-  matP10 -> AddMaterial(matMethaneGas, 0.1*densityMethane/densityP10);
+  G4double densityP10 = .8*densityArGas + .2*densityMethane;
+  G4Material *matP10 = new G4Material("matP10", densityP10, 2, kStateGas, labTemperature);
+  matP10 -> AddMaterial(matArGas, 0.8*densityArGas/densityP10);
+  matP10 -> AddMaterial(matMethaneGas, 0.2*densityMethane/densityP10);
 
   G4Material *matAir = nist -> FindOrBuildMaterial("G4_AIR");
 

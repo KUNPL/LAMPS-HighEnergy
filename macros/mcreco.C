@@ -1,4 +1,4 @@
-void mcreco(TString name = "lamps2")
+void mcreco(TString name = "lamps2_R100")
 {
   auto run = KBRun::GetRun();
   run -> AddParameterFile("lamps2.par");
@@ -21,5 +21,15 @@ void mcreco(TString name = "lamps2")
   run -> Add(new LHMCRecoMatchingTask());
 
   run -> Init();
+  run -> SetAutoTermination(false);
   run -> Run();
+
+int num;
+ifstream ifile("check.txt");
+ifile >> num;
+ifile.close();
+ofstream ofile("check.txt",ofstream::trunc);
+ofile << num-1 << endl;
+ofile.close();
+
 }
