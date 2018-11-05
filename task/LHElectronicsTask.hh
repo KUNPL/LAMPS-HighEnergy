@@ -12,7 +12,7 @@
 class LHElectronicsTask : public KBTask
 { 
   public:
-    LHElectronicsTask();
+    LHElectronicsTask(Bool_t usePointChargeMC = false);
     virtual ~LHElectronicsTask() {}
 
     bool Init();
@@ -27,6 +27,8 @@ class LHElectronicsTask : public KBTask
     Double_t fDynamicRange;
 
     TF1 *fPulseFunction;
+
+    Bool_t fUsePointChargeMC = false;
 
   ClassDef(LHElectronicsTask, 1)
 };
