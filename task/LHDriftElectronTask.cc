@@ -64,6 +64,7 @@ void LHDriftElectronTask::Exec(Option_t*)
     if (fSelectedTrackID != -1 && fSelectedTrackID != step -> GetTrackID())
       continue;
 
+    Int_t trackID = step -> GetTrackID();
     Double_t xMC = step -> GetX();
     Double_t yMC = step -> GetY();
     Double_t zMC = step -> GetZ();
@@ -109,10 +110,10 @@ void LHDriftElectronTask::Exec(Option_t*)
       Double_t iDiffGEM, jDiffGEM;
       for (Int_t iElCluster = 0; iElCluster < nElClusters; iElCluster++) {
         fDiffusionFunction -> GetRandom2(iDiffGEM, jDiffGEM);
-        fTpc -> GetPadPlane(planeID) -> FillBufferIn(iMC+di+iDiffGEM*10, jMC+dj+jDiffGEM*10, tb, fNElInCluster);
+        fTpc -> GetPadPlane(planeID) -> FillBufferIn(iMC+di+iDiffGEM*10, jMC+dj+jDiffGEM*10, tb, fNElInCluster, trackID);
       }
       fDiffusionFunction -> GetRandom2(iDiffGEM, jDiffGEM);
-      fTpc -> GetPadPlane(planeID) -> FillBufferIn(iMC+di+iDiffGEM*10, jMC+dj+jDiffGEM*10, tb, gainRemainder);
+      fTpc -> GetPadPlane(planeID) -> FillBufferIn(iMC+di+iDiffGEM*10, jMC+dj+jDiffGEM*10, tb, gainRemainder, trackID);
     }
   }
 
