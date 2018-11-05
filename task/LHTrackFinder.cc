@@ -81,16 +81,12 @@ void LHTrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
 #else
     if (InitTrack(track))
     {
-      TrackContinuum(track);
-      survive = true;
-    }
-      /*
       if (TrackContinuum(track))
         if (TrackExtrapolation(track)) {
           TrackConfirmation(track);
           survive = true;
         }
-        */
+    }
 #endif
 
     Int_t numBadHits = fBadHits -> size();
