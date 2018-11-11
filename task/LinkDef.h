@@ -10,5 +10,7 @@
 #pragma link C++ class LHTrackFindingTask+;
 #pragma link C++ class LHVertexFindingTask+;
 #pragma link C++ class LHMCRecoMatchingTask+;
+#pragma link C++ class LHMCRecoMatchingTask+;
+#pragma link C++ class LHRecoEfficiencyAna+;
 
 #endif

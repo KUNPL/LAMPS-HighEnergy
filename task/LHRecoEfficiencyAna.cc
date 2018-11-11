@@ -48,7 +48,7 @@ void LHRecoEfficiencyAna::Exec(Option_t*)
 
     auto matMC = (KBMCRecoMatching *) fMCArray -> ConstructedAt(iMCTrack);
     matMC -> SetMCID(mcID);
-    matMC -> SetMCMomentum(iMCTrack);
+    matMC -> SetMCMomentum(mcTrack->Momentum());
     matMC -> SetIsNotFound();
   }
 
@@ -63,11 +63,11 @@ void LHRecoEfficiencyAna::Exec(Option_t*)
     auto mcTrack = (KBMCTrack *) fMCTrackArray -> At(mcID);
 
     auto matReco = (KBMCRecoMatching *) fRecoArray -> ConstructedAt(iRecoTrack);
-         matReco -> Set(mcID,mcTrack->Momentum()iRecoTrack,recoTrack->Momentum());
+         matReco -> Set(mcID,mcTrack->Momentum(),iRecoTrack,recoTrack->Momentum());
          matReco -> SetIsMatched();
 
     auto matMC = (KBMCRecoMatching *) fMCArray -> At(fMCIDIdx[mcID]);
-    if (matMC -> IsNotMatched()) {
+    if (matMC -> IsNotFound()) {
       matMC -> SetRecoID(iRecoTrack);
       matMC -> SetRecoMomentum(recoTrack -> Momentum());
       matMC -> SetIsMatched();
@@ -82,7 +82,7 @@ void LHRecoEfficiencyAna::Exec(Option_t*)
   for (auto iMCTrack = 0; iMCTrack < numMCTracks; iMCTrack++)
   {
     auto matMC = (KBMCRecoMatching *) fMCArray -> At(iMCTrack);
-    if (matMC -> IsNotMatched())
+    if (matMC -> IsNotFound())
       continue;
 
     ++countFound;
@@ -94,7 +94,7 @@ void LHRecoEfficiencyAna::Exec(Option_t*)
     auto pMC = matMC -> GetMCMomentum();
     auto pReco = matMC -> GetRecoMomentum();
 
-    auto dpMin = pMC.Mag()-pReco.Mag();
+    auto dpBestCand = pMC.Mag()-pReco.Mag();
     auto idxBestCand = -1;
     auto recoIDBestCand = -1;
     auto pBestCand = pReco;
@@ -102,7 +102,7 @@ void LHRecoEfficiencyAna::Exec(Option_t*)
     for (auto iCand = 0; iCand < numCands; ++iCand) {
       auto pcand = matMC -> GetRecoMomentumCand(iCand);
       auto dpCand = pMC.Mag()-pcand.Mag();
-      if (dpCand < dpMin) {
+      if (dpCand < dpBestCand) {
         dpBestCand = dpCand;
         idxBestCand = iCand;
         recoIDBestCand = matMC -> GetRecoIDCand(iCand);
@@ -111,8 +111,8 @@ void LHRecoEfficiencyAna::Exec(Option_t*)
     }
 
     if (idxBestCand != -1) {
-      SetRecoCand(idxBestCand, matMC->GetRecoID(), matMC->GetRecoMomentum());
-      SetReco(recoIDBestCand, pBestCand);
+      matMC -> SetRecoCand(idxBestCand, matMC->GetRecoID(), matMC->GetRecoMomentum());
+      matMC -> SetReco(recoIDBestCand, pBestCand);
     }
   }
 
