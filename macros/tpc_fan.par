@@ -1,5 +1,5 @@
 G4InputFile   s  $KEBIPATH/input/IQMD_short.gen
-G4OutputFile  s  $KEBIPATH/data/lamps2.mc.root
+G4OutputFile  s  $KEBIPATH/data/tpc_fan.mc.root
 
 tpcBFieldAxis  s z  # axis of B-field direction
 tpcEFieldAxis  s z  # axis of E-field direction

@@ -1,4 +1,4 @@
-void reco(TString name = "lamps2")
+void reco(TString name = "tpc_rec")
 {
   auto run = KBRun::GetRun();
   run -> SetIOFile(name+".digi", name+".reco");

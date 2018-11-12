@@ -1,4 +1,4 @@
-void digi(TString name = "lamps2")
+void digi(TString name = "tpc_rec")
 {
   auto run = KBRun::GetRun();
   run -> SetIOFile(name+".mc", name+".digi");
@@ -7,11 +7,12 @@ void digi(TString name = "lamps2")
   auto drift = new LHDriftElectronTask();
   drift -> SetPadPersistency(true);
 
-  auto electronics = new LHElectronicsTask();
+  auto electronics = new LHElectronicsTask(true);
 
   run -> Add(drift);
   run -> Add(electronics);
 
   run -> Init();
   run -> Run();
+  //run -> RunSingle(0);
 }
