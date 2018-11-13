@@ -536,7 +536,8 @@ void LHPadPlaneRPad::DrawFrame(Option_t *)
 TCanvas *LHPadPlaneRPad::GetCanvas(Option_t *)
 {
   if (fCanvas == nullptr)
-    fCanvas = new TCanvas(fName+Form("%d",fPlaneID),fName,800,800);
+    fCanvas = new TCanvas(fName+Form("%d",fPlaneID),fName,890,750);
+  fCanvas -> SetMargin(0.13,0.13,0.08,0.02);
 
   return fCanvas;
 }
