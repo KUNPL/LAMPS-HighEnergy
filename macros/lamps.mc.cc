@@ -29,7 +29,7 @@ int main(int argc, char** argv)
   if (argc >= 2)
     runManager -> SetParameterContainer(argv[2]);
   else
-    runManager -> SetParameterContainer("lamps.par");
+    runManager -> SetParameterContainer("tpc_rec.par");
   runManager -> SetUserInitialization(new LHDetectorConstruction());
   runManager -> SetUserAction(new KBPrimaryGeneratorAction());
   runManager -> SetUserAction(new KBEventAction());

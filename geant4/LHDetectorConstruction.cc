@@ -37,6 +37,10 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   G4double tpcLength = par -> GetParDouble("tpcLength");
   G4double tpcZOffset = par -> GetParDouble("zOffset");
 
+  G4double bfieldx = par -> GetParDouble("bfieldx");
+  G4double bfieldy = par -> GetParDouble("bfieldy");
+  G4double bfieldz = par -> GetParDouble("bfieldz");
+
   G4NistManager *nist = G4NistManager::Instance();
   G4double STPTemperature = 273.15;
   G4double labTemperature = STPTemperature + 20.*kelvin;
@@ -61,7 +65,7 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 
   G4Tubs *solidWorld = new G4Tubs("World", 0, tpcOuterRadius*1.1, tpcLength, 0., 360*deg);
   G4LogicalVolume *logicWorld = new G4LogicalVolume(solidWorld, matAir, "World");
-  G4PVPlacement *physWorld = new G4PVPlacement(0, G4ThreeVector(), logicWorld, "World", 0, false, 0, true);
+  G4PVPlacement *physWorld = new G4PVPlacement(0, G4ThreeVector(), logicWorld, "World", 0, false, -1, true);
 
 
   G4Tubs *solidTPC = new G4Tubs("TPC", tpcInnerRadius, tpcOuterRadius, .5*tpcLength, 0., 360*deg);
@@ -76,7 +80,7 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   runManager -> SetSensitiveDetector(pvp);
 
 
-  new G4GlobalMagFieldMessenger(G4ThreeVector(0., 0., 0.5*tesla));
+  new G4GlobalMagFieldMessenger(G4ThreeVector(bfieldx*tesla, bfieldy*tesla, bfieldz*tesla));
 
   return physWorld;
 }

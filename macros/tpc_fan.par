@@ -1,5 +1,6 @@
 G4InputFile   s  $KEBIPATH/input/IQMD_short.gen
 G4OutputFile  s  $KEBIPATH/data/tpc_fan.mc.root
+MCStepPersistency b true
 
 tpcBFieldAxis  s z  # axis of B-field direction
 tpcEFieldAxis  s z  # axis of E-field direction
@@ -14,6 +15,9 @@ rMinTPC   d  150.
 rMaxTPC   d  500.
 tpcLength d  1200.
 zOffset   d  300.
+bfieldx   d  0.     # Tesla
+bfieldy   d  0.     # Tesla
+bfieldz   d  0.5    # Tesla
 
 ### PSA
 ADCThreshold d 10
