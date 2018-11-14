@@ -56,9 +56,28 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   matMethaneGas -> AddElement(elementH, 4);
   matMethaneGas -> AddElement(elementC, 1);
 
-  G4double densityP10 = .9*densityArGas + .1*densityMethane;
-  G4Material *matP10 = new G4Material("matP10", densityP10, 2, kStateGas, labTemperature); matP10 -> AddMaterial(matArGas, 0.9*densityArGas/densityP10);
-  matP10 -> AddMaterial(matMethaneGas, 0.1*densityMethane/densityP10);
+  TString gasPar = "p10";
+  if (par -> CheckPar("gasPar")) {
+    gasPar = par -> GetParString("gasPar");
+    gasPar.ToLower();
+         if (gasPar.Index("p10")>=0) gasPar = "p10";
+    else if (gasPar.Index("p20")>=0) gasPar = "p20";
+    else gasPar = "p10";
+  }
+
+  G4Material *matGas = nullptr;
+  if (gasPar == "p10") {
+    G4double densityGas = .9*densityArGas + .1*densityMethane;
+    matGas = new G4Material("matP10", densityGas, 2, kStateGas, labTemperature);
+    matGas -> AddMaterial(matArGas, 0.9*densityArGas/densityGas);
+    matGas -> AddMaterial(matMethaneGas, 0.1*densityMethane/densityGas);
+  }
+  else if (gasPar == "p20") {
+    G4double densityGas = .8*densityArGas + .2*densityMethane;
+    matGas = new G4Material("matP20", densityGas, 2, kStateGas, labTemperature);
+    matGas -> AddMaterial(matArGas, 0.8*densityArGas/densityGas);
+    matGas -> AddMaterial(matMethaneGas, 0.2*densityMethane/densityGas);
+  }
 
   G4Material *matAir = nist -> FindOrBuildMaterial("G4_AIR");
 
@@ -69,7 +88,7 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 
 
   G4Tubs *solidTPC = new G4Tubs("TPC", tpcInnerRadius, tpcOuterRadius, .5*tpcLength, 0., 360*deg);
-  G4LogicalVolume *logicTPC = new G4LogicalVolume(solidTPC, matP10, "TPC");
+  G4LogicalVolume *logicTPC = new G4LogicalVolume(solidTPC, matGas, "TPC");
   {
     G4VisAttributes * attTPC = new G4VisAttributes(G4Colour(G4Colour::Gray()));
     attTPC -> SetForceWireframe(true);

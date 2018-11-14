@@ -22,7 +22,7 @@ bfieldz   d  0.5    # Tesla
 ### PSA
 ADCThreshold d 10
 
-garPar f $KEBIPATH/input/p20.par
+gasPar f $KEBIPATH/input/p20.par
 
 ### KBDriftElectron
 eVToADC d 0.0002
