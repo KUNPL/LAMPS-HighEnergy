@@ -2,7 +2,6 @@
 #define LHVERTEXFINDINGTASK_HH
 
 #include "KBTask.hh"
-#include "KBHelixTrackFitter.hh"
 #include "KBVertex.hh"
 #include "KBVector3.hh"
 

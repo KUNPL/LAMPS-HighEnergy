@@ -1,8 +1,9 @@
-//#define PRINT_PROCESS
 //#define PULLIN
 //#define SINGlETRACK_DEBUGGER
 //#define CONTINUITY_DEBUGGER
+//#define VERTEX_POINT_ADDED
 
+#include "KBRun.hh"
 #include "LHTrackFinder.hh"
 
 #include <iostream>
@@ -23,23 +24,23 @@ bool LHTrackFinder::Init()
   fTrackHCutLL = fPar -> GetParDouble("LHTF_trackHCutLL");
   fTrackHCutHL = fPar -> GetParDouble("LHTF_trackHCutHL");
 
-  TString axis = fPar -> GetParString("tpcBFieldAxis");
-       if (axis=="x") fReferenceAxis = KBVector3::kX;
-  else if (axis=="y") fReferenceAxis = KBVector3::kY;
-  else if (axis=="z") fReferenceAxis = KBVector3::kZ;
-  else {
-    kb_error << "Error! tpcBFieldAxis is " << axis << endl;
-    return false;
-  }
+  fReferenceAxis = fPar -> GetParAxis("tpcBFieldAxis");
 
-  fFitter = KBHelixTrackFitter::GetFitter();
-  fFitter -> SetReferenceAxis(fReferenceAxis);
+  fVertexPoint = new KBTpcHit();
+  fVertexPoint -> Set(0,0,0,1);
 
   return true;
 }
 
 void LHTrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
 {
+#ifdef PRINT_PROCESS_SUMMARY
+  fCountNew = 0;
+  fCountInit = 0;
+  fCountConti = 0;
+  fCountExtrap = 0;
+  fCountConfirm = 0;
+#endif
 #ifdef CHECK_INITIAL_HITS
   fCheckHitIndex = CHECK_INITIAL_HITS;
 #endif
@@ -56,8 +57,6 @@ void LHTrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
   fGoodHits -> clear();
   fBadHits -> clear();
 
-  //fPadPlane -> Print("detail");
-
   while(1)
   {
     KBHelixTrack *track = NewTrack();
@@ -66,19 +65,6 @@ void LHTrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
 
     bool survive = false;
 
-#ifdef PRINT_PROCESS
-    auto count0 = 0;
-    if (++count0, kb_print << "Init " << count0 << endl, InitTrack(track)) {
-      auto count1 = 0;
-      if (++count1, kb_print << "Continuum " << count0 << "->" << count1 << endl, TrackContinuum(track)) {
-        auto count2 = 0;
-        if (++count2, kb_print << "Extrapolation " << count0 << "->" << count1 << "->" << count2 << endl, TrackExtrapolation(track)) {
-          TrackConfirmation(track);
-          survive = true;
-        }
-      }
-    }
-#else
     if (InitTrack(track))
     {
       if (TrackContinuum(track))
@@ -87,7 +73,6 @@ void LHTrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
           survive = true;
         }
     }
-#endif
 
     Int_t numBadHits = fBadHits -> size();
     for (Int_t iHit = 0; iHit < numBadHits; ++iHit)
@@ -125,10 +110,21 @@ void LHTrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
     KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
     track -> FinalizeHits();
   }
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << " newtrk:" << fCountNew
+          << " init:" << fCountInit
+          << " conti:" << fCountConti
+          << " extrap:" << fCountExtrap
+          << " confirm:" << fCountConfirm << endl;
+#endif
 }
 
 KBHelixTrack *LHTrackFinder::NewTrack()
 {
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << fCountNew << endl;
+  fCountNew++;
+#endif
   KBTpcHit *hit = fPadPlane -> PullOutNextFreeHit();
 #ifdef CHECK_INITIAL_HITS
   if (fCheckHitIndex>0) {
@@ -152,6 +148,10 @@ KBHelixTrack *LHTrackFinder::NewTrack()
 
 bool LHTrackFinder::InitTrack(KBHelixTrack *track)
 {
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << fCountInit << endl;
+  fCountInit++;
+#endif
 #ifdef PULLIN
   fPadPlane -> PullOutNeighborHitsIn(fGoodHits, fCandHits);
 #else
@@ -182,13 +182,16 @@ bool LHTrackFinder::InitTrack(KBHelixTrack *track)
         }
 
         if (track -> GetNumHits() > 6) {
-          fFitter -> Fit(track);
-          if (!(track -> GetNumHits() < 10 && track -> GetHelixRadius() < 30) && (track -> TrackLength() > 2.5 * track -> GetRMSW())) {
+          track -> Fit();
+          if (!(track -> GetNumHits() < 10 && track -> GetHelixRadius() < 30) && (track -> TrackLength() > 2.5 * track -> GetRMSR())) {
+#ifdef VERTEX_POINT_ADDED
+            track -> AddHit(fVertexPoint);
+#endif
             return true;
           }
         }
 
-        fFitter -> FitPlane(track);
+        track -> FitPlane();
       }
       else
         fBadHits -> push_back(candHit);
@@ -213,9 +216,12 @@ bool LHTrackFinder::InitTrack(KBHelixTrack *track)
 
 bool LHTrackFinder::TrackContinuum(KBHelixTrack *track)
 {
-
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << fCountConti << endl;
+  fCountConti++;
+#endif
 #ifdef SINGlETRACK_DEBUGGER
-  kb_warning << "[TrackContinuum] Building Track:" << track -> GetTrackID() << endl;
+  kb_warning << "Continuum; Building Track:" << track -> GetTrackID() << endl;
 #endif
 
 #ifdef PULLIN
@@ -245,7 +251,7 @@ bool LHTrackFinder::TrackContinuum(KBHelixTrack *track)
       if (quality > 0) {
         fGoodHits -> push_back(candHit);
         track -> AddHit(candHit);
-        fFitter -> Fit(track);
+        track -> Fit();
 #ifdef SINGlETRACK_DEBUGGER
         kb_warning << "Hit:" << iHit << " Quality = " << quality << " is good. # of Hits = " << track -> GetNumHits() << endl;
 #endif
@@ -272,6 +278,10 @@ bool LHTrackFinder::TrackContinuum(KBHelixTrack *track)
 
 bool LHTrackFinder::TrackExtrapolation(KBHelixTrack *track)
 {
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << fCountExtrap << endl;
+  fCountExtrap++;
+#endif
   for (UInt_t iBad = 0; iBad < fBadHits -> size(); ++iBad)
     fPadPlane -> AddHit(fBadHits -> at(iBad));
   fBadHits -> clear();
@@ -301,6 +311,14 @@ bool LHTrackFinder::TrackExtrapolation(KBHelixTrack *track)
 
 bool LHTrackFinder::TrackConfirmation(KBHelixTrack *track)
 {
+#ifdef VERTEX_POINT_ADDED
+  track -> RemoveHit(fVertexPoint);
+  track -> Fit();
+#endif
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << fCountConfirm << endl;
+  fCountConfirm++;
+#endif
   bool tailToHead = false;
   //if (track -> PositionAtTail().Z() > track -> PositionAtHead().Z())
   KBVector3 pTail(track -> PositionAtTail(), fReferenceAxis);
@@ -371,12 +389,12 @@ Double_t LHTrackFinder::Correlate(KBHelixTrack *track, KBTpcHit *hit, Double_t r
   auto trackWCutLL = fTrackWCutLL;
   auto trackWCutHL = fTrackWCutHL;
 
-  Double_t rmsWCut = track -> GetRMSW();
+  Double_t rmsWCut = track -> GetRMSR();
   if (rmsWCut < trackWCutLL) rmsWCut = trackWCutLL;
   if (rmsWCut > trackWCutHL) rmsWCut = trackWCutHL;
   rmsWCut = scale * rmsWCut;
 
-  Double_t rmsHCut = track -> GetRMSH();
+  Double_t rmsHCut = track -> GetRMST();
   if (rmsHCut < trackHCutLL) rmsHCut = trackHCutLL;
   if (rmsHCut > trackHCutHL) rmsHCut = trackHCutHL;
   rmsHCut = scale * rmsHCut;
@@ -405,7 +423,7 @@ bool LHTrackFinder::LengthAlphaCut(KBHelixTrack *track, Double_t dLength)
 {
   if (dLength > 0) {
     if (dLength > .5*track -> TrackLength()) {
-      if (abs(track -> AlphaByLength(dLength)) > .5*TMath::Pi()) {
+      if (abs(track -> AlphaAtTravelLength(dLength)) > .5*TMath::Pi()) {
         return true;
       }
     }
@@ -453,7 +471,7 @@ Double_t LHTrackFinder::CorrelateSimple(KBHelixTrack *track, KBTpcHit *hit)
   else if (track -> IsLine()) {
     KBVector3 perp = track -> PerpLine(hit -> GetPosition());
 
-    Double_t rmsCut = track -> GetRMSH();
+    Double_t rmsCut = track -> GetRMST();
     if (rmsCut < fTrackHCutLL) rmsCut = fTrackHCutLL;
     if (rmsCut > fTrackHCutHL) rmsCut = fTrackHCutHL;
     rmsCut = 3 * rmsCut;
@@ -474,7 +492,7 @@ Double_t LHTrackFinder::CorrelateSimple(KBHelixTrack *track, KBTpcHit *hit)
   else if (track -> IsPlane()) {
     Double_t dist = (track -> PerpPlane(hit -> GetPosition())).Mag();
 
-    Double_t rmsCut = track -> GetRMSH();
+    Double_t rmsCut = track -> GetRMST();
     if (rmsCut < fTrackHCutLL) rmsCut = fTrackHCutLL;
     if (rmsCut > fTrackHCutHL) rmsCut = fTrackHCutHL;
     rmsCut = 3 * rmsCut;
@@ -509,7 +527,7 @@ bool LHTrackFinder::ConfirmHits(KBHelixTrack *track, bool &tailToHead)
       track -> RemoveHit(trackHit);
       trackHit -> RemoveTrackCand(trackHit -> GetTrackID());
       Int_t helicity = track -> Helicity();
-      fFitter -> Fit(track);
+      track -> Fit();
       if (helicity != track -> Helicity())
         tailToHead = !tailToHead;
 
@@ -531,6 +549,9 @@ bool LHTrackFinder::ConfirmHits(KBHelixTrack *track, bool &tailToHead)
 
 bool LHTrackFinder::AutoBuildByExtrapolation(KBHelixTrack *track, bool &buildHead, Double_t &extrapolationLength)
 {
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << "in" << endl;
+#endif
   TVector3 p;
   if (buildHead) p = track -> ExtrapolateHead(extrapolationLength);
   else           p = track -> ExtrapolateTail(extrapolationLength);
@@ -549,6 +570,9 @@ bool LHTrackFinder::AutoBuildByInterpolation(KBHelixTrack *track, bool &tailToHe
 
 bool LHTrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &tailToHead, Double_t &extrapolationLength, Double_t rScale)
 {
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << "in" << endl;
+#endif
   //if (fPadPlane -> IsInBoundary(p.X(), p.Z()) == false)
   KBVector3 p2(p,fReferenceAxis);
   if (fPadPlane -> IsInBoundary(p2.I(), p2.J()) == false)
@@ -556,13 +580,19 @@ bool LHTrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &t
 
   Int_t helicity = track -> Helicity();
 
-  Double_t rms = 3*track -> GetRMSW();
+  Double_t rms = 3*track -> GetRMSR();
   if (rms < 25) 
     rms = 25;
 
   Int_t range = Int_t(rms/8);
   TVector2 q(p2.I(), p2.J());
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << "a" << endl;
+#endif
   fPadPlane -> PullOutNeighborHits(q, range, fCandHits);
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << "b" << endl;
+#endif
 
   Int_t numCandHits = fCandHits -> size();
   Bool_t foundHit = false;
@@ -582,7 +612,7 @@ bool LHTrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &t
 
       if (quality > 0) {
         track -> AddHit(candHit);
-        fFitter -> Fit(track);
+        track -> Fit();
         foundHit = true;
       } else
         fBadHits -> push_back(candHit);
@@ -601,6 +631,9 @@ bool LHTrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &t
     }
   }
 
+#ifdef PRINT_PROCESS_SUMMARY
+  kb_info << "out" << endl;
+#endif
   return true;
 }
 
@@ -663,6 +696,10 @@ Double_t LHTrackFinder::Continuity(KBHelixTrack *track)
 bool LHTrackFinder::TrackQualityCheck(KBHelixTrack *track)
 {
   Double_t continuity = Continuity(track);
+#ifdef PRINT_PROCESS_SUMMARY
+  //track -> Print(">");
+  //KBRun::GetRun() -> Terminate(this);
+#endif
   if (continuity < .6) {
     if (track -> TrackLength() * continuity < 500)
       return false;

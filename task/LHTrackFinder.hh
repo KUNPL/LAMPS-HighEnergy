@@ -2,10 +2,10 @@
 #define LHTRACKFINDER_HH
 
 //#define CHECK_INITIAL_HITS 1 //XXX
+#define PRINT_PROCESS_SUMMARY
 
 #include "KBTrackFinder.hh"
 #include "KBHelixTrack.hh"
-#include "KBHelixTrackFitter.hh"
 
 #include "TClonesArray.h"
 
@@ -57,7 +57,6 @@ class LHTrackFinder : public KBTrackFinder
     LHTpc *fTpc = nullptr;
     LHPadPlane *fPadPlane = nullptr;
     TClonesArray *fTrackArray = nullptr;
-    KBHelixTrackFitter *fFitter = nullptr;
 
     KBTpcHits *fCandHits = nullptr;
     KBTpcHits *fGoodHits = nullptr;
@@ -70,6 +69,16 @@ class LHTrackFinder : public KBTrackFinder
     Double_t fTrackHCutHL;  ///< Track height cut high limit
 
     KBVector3::Axis fReferenceAxis;
+
+    KBTpcHit *fVertexPoint;
+
+#ifdef PRINT_PROCESS_SUMMARY
+    Int_t fCountNew;
+    Int_t fCountInit;
+    Int_t fCountConti;
+    Int_t fCountExtrap;
+    Int_t fCountConfirm;
+#endif
 
 #ifdef CHECK_INITIAL_HITS
     Int_t fCheckHitIndex = CHECK_INITIAL_HITS;

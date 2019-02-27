@@ -65,21 +65,17 @@ void LHDriftElectronTask::Exec(Option_t*)
       continue;
 
     Int_t trackID = step -> GetTrackID();
-    Double_t xMC = step -> GetX();
-    Double_t yMC = step -> GetY();
-    Double_t zMC = step -> GetZ();
     Double_t edep = step -> GetEdep();
-
-    Double_t iMC, jMC, kMC;
-    fTpc -> XYZToIJK(xMC, yMC, zMC, iMC, jMC, kMC);
+    KBVector3 posMC(step -> GetX(),step -> GetY(),step -> GetZ());
+    posMC.SetReferenceAxis(fTpc -> GetEFieldAxis());
 
     Int_t planeID;
     Double_t kPlane;
-    fTpc -> GetDriftPlane(kMC, planeID, kPlane);
+    fTpc -> GetDriftPlane(posMC.K(), planeID, kPlane);
     if (planeID == -1)
       continue;
 
-    Double_t lDrift = std::abs(kPlane - kMC);
+    Double_t lDrift = std::abs(kPlane - posMC.K());
     Double_t tDrift = lDrift/fDriftVelocity;
     Double_t sigmaLD = fCoefLD * sqrt(lDrift);
     Double_t sigmaTD = fCoefTD * sqrt(lDrift);
@@ -110,10 +106,10 @@ void LHDriftElectronTask::Exec(Option_t*)
       Double_t iDiffGEM, jDiffGEM;
       for (Int_t iElCluster = 0; iElCluster < nElClusters; iElCluster++) {
         fDiffusionFunction -> GetRandom2(iDiffGEM, jDiffGEM);
-        fTpc -> GetPadPlane(planeID) -> FillBufferIn(iMC+di+iDiffGEM*10, jMC+dj+jDiffGEM*10, tb, fNElInCluster, trackID);
+        fTpc -> GetPadPlane(planeID) -> FillBufferIn(posMC.I()+di+iDiffGEM*10, posMC.J()+dj+jDiffGEM*10, tb, fNElInCluster, trackID);
       }
       fDiffusionFunction -> GetRandom2(iDiffGEM, jDiffGEM);
-      fTpc -> GetPadPlane(planeID) -> FillBufferIn(iMC+di+iDiffGEM*10, jMC+dj+jDiffGEM*10, tb, gainRemainder, trackID);
+      fTpc -> GetPadPlane(planeID) -> FillBufferIn(posMC.I()+di+iDiffGEM*10, posMC.J()+dj+jDiffGEM*10, tb, gainRemainder, trackID);
     }
   }
 
