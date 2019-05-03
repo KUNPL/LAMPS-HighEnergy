@@ -15,7 +15,7 @@ using namespace std;
 ClassImp(LHPadPlane)
 
 LHPadPlane::LHPadPlane()
-:KBPadPlane("LAMPS-TPC Pad Plane", "")
+:KBPadPlane("PadPlaneF", "pad plane with fan shape pads for LAMPS-TPC")
 {
 }
 

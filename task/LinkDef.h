@@ -13,4 +13,6 @@
 #pragma link C++ class LHMCRecoMatchingTask+;
 #pragma link C++ class LHRecoEfficiencyAna+;
 
+#pragma link C++ class LHScintDigiTask+;
+
 #endif

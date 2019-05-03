@@ -1,10 +1,14 @@
-G4InputFile   s  $KEBIPATH/input/IQMD_short.gen
-G4OutputFile  s  $KEBIPATH/data/tpc_rec.mc.root
-MCStepPersistency b true
+#G4InputFile   s  $KEBIPATH/input/IQMD_short.gen
+#G4OutputFile  s  $KEBIPATH/data/tpc_rec.mc.root
+#MCStepPersistency b true
 
-tpcBFieldAxis  s z  # axis of B-field direction
-tpcEFieldAxis  s z  # axis of E-field direction
-tpcDriftAxis   s z  # direction of electric field
+worlddX d 1500
+worlddY d 1500
+worlddZ d 4200
+
+tpcBFieldAxis  a z  # axis of B-field direction
+tpcEFieldAxis  a z  # axis of E-field direction
+tpcDriftAxis   a z  # direction of electric field
 tbStart i 0
 nTbs    i 512
 tbTime  d 40   # [ns]
@@ -28,19 +32,7 @@ gasPar f $KEBIPATH/input/p20.par
 eVToADC d 0.0002
 dynamicRange d 1000000
 
-#selectMCTrack i 143 # comment out to digitize single track
-
-### LAPadPlane
-ppNLayerDivision  i 2
-  innerTrackerDivisionIndex i 0
-
-  ppArcLength0    d 3.
-  ppRadius0       d 10.
-  ppNLayers0      i 14
-
-  ppArcLength1    d 4.
-  ppRadius1       d 15.
-  ppNLayers1      i 14
+#selectMCTrack i 1 # comment out to digitize single track
 
 ### For one side pad plane
 tpcCathodePlaneK  d -300.

@@ -2,9 +2,9 @@ G4InputFile   s  $KEBIPATH/input/IQMD_short.gen
 G4OutputFile  s  $KEBIPATH/data/tpc_fan.mc.root
 MCStepPersistency b true
 
-tpcBFieldAxis  s z  # axis of B-field direction
-tpcEFieldAxis  s z  # axis of E-field direction
-tpcDriftAxis   s z  # direction of electric field
+tpcBFieldAxis  a z  # axis of B-field direction
+tpcEFieldAxis  a z  # axis of E-field direction
+tpcDriftAxis   a z  # direction of electric field
 tbStart i 0
 nTbs    i 512
 tbTime  d 40   # [ns]
@@ -34,7 +34,7 @@ tpcGEMDataFile    s  $KEBIPATH/input/tripleGEM.root
 eVToADC d 0.0002
 dynamicRange d 1000000
 
-### LAPadPlane
+PadPlaneType s LHPadPlane
 ppNLayerDivision  i 2
   innerTrackerDivisionIndex i 0
 
@@ -57,5 +57,3 @@ LHTF_trackWCutLL  d 5.  # 4.
 LHTF_trackWCutHL  d 15. # 10.
 LHTF_trackHCutLL  d 5.  # 2.
 LHTF_trackHCutHL  d 15. # 4.
-
-PadPlaneType s LHPadPlane

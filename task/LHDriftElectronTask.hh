@@ -2,7 +2,7 @@
 #define LHDRIFTElECTRONTASK_HH
 
 #include "KBTask.hh"
-#include "KBTpc.hh"
+#include "LHTpc.hh"
 
 #include "TH2D.h"
 #include "TF1.h"
@@ -24,7 +24,7 @@ class LHDriftElectronTask : public KBTask
     TClonesArray* fPadArray;
     bool fPersistency = true;
 
-    KBTpc *fTpc = nullptr;
+    LHTpc *fTpc = nullptr;
     KBPadPlane *fPadPlane = nullptr;
     Int_t fNPlanes = 0;
 

@@ -6,15 +6,22 @@ void nx(Int_t eventID = -1) {
   cout << "Event " << fEventID << endl;
 }
 
-void eve(TString name = "last", TString opt = "")
-//void eve(TString name = "lamps2.mc", TString opt = "MCTrack")
+//void eve(TString name = "/Users/ejungwoo/kebii/data/single_IQMD.mc.root")
+void eve(TString name = "last")
 {
+  TString branches = "MCTrack";
+  TString option = "p";
+
   auto run = new KBRun();
   run -> SetInputFile(name);
   run -> SetTag("eve");
-  run -> SetEve(opt);
+
+  run -> SelectEveBranches(branches);
   run -> AddDetector(new LHTpc());
+  run -> AddDetector(new LHNeutronScintArray());
   run -> Init();
+
+  //run -> AddPar("pdg_selection.par");
   run -> SetGeoTransparency(80);
-  run -> RunEve(fEventID);
+  run -> RunEve(fEventID,"e");
 }

@@ -22,9 +22,9 @@ bool LHDriftElectronTask::Init()
   KBRun *run = KBRun::GetRun();
 
   fMCStepArray = (TClonesArray *) run -> GetBranch("MCStep0");
-  fTpc = (KBTpc *) run -> GetDetector();
+  fTpc = (LHTpc *) run -> GetDetectorSystem() -> GetTpc();
 
-  fNPlanes = fTpc -> GetNPlanes();
+  fNPlanes = fTpc -> GetNumPlanes();
 
   KBParameterContainer *par = run -> GetParameterContainer();
   fDriftVelocity = par -> GetParDouble("gasDriftVelocity");
@@ -69,11 +69,12 @@ void LHDriftElectronTask::Exec(Option_t*)
     KBVector3 posMC(step -> GetX(),step -> GetY(),step -> GetZ());
     posMC.SetReferenceAxis(fTpc -> GetEFieldAxis());
 
-    Int_t planeID;
-    Double_t kPlane;
-    fTpc -> GetDriftPlane(posMC.K(), planeID, kPlane);
-    if (planeID == -1)
+    auto plane = fTpc -> GetDriftPlane(posMC.GetXYZ());
+    if (plane == nullptr)
       continue;
+
+    Int_t planeID = plane -> GetPlaneID();
+    Double_t kPlane = plane -> GetPlaneK();
 
     Double_t lDrift = std::abs(kPlane - posMC.K());
     Double_t tDrift = lDrift/fDriftVelocity;

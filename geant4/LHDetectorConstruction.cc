@@ -2,6 +2,7 @@
 #include "LHDetectorConstruction.hh"
 
 #include "KBG4RunManager.hh"
+#include "KBGeoBoxStack.hh"
 #include "G4RunManager.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
@@ -82,7 +83,12 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   G4Material *matAir = nist -> FindOrBuildMaterial("G4_AIR");
 
 
-  G4Tubs *solidWorld = new G4Tubs("World", 0, tpcOuterRadius*1.1, tpcLength, 0., 360*deg);
+  G4double worlddX = par -> GetParDouble("worlddX");
+  G4double worlddY = par -> GetParDouble("worlddY");
+  G4double worlddZ = par -> GetParDouble("worlddZ");
+
+
+  G4Box *solidWorld = new G4Box("World", worlddX, worlddY, worlddZ);
   G4LogicalVolume *logicWorld = new G4LogicalVolume(solidWorld, matAir, "World");
   G4PVPlacement *physWorld = new G4PVPlacement(0, G4ThreeVector(), logicWorld, "World", 0, false, -1, true);
 
@@ -98,6 +104,36 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicTPC, "TPC", logicWorld, false, 0, true);
   runManager -> SetSensitiveDetector(pvp);
 
+
+
+  G4Material* scint_mat = nist -> FindOrBuildMaterial("G4_XYLENE");
+
+  G4int numWall = par -> GetParInt("numNeutronWall");
+  for (auto iwall = 0; iwall < numWall; ++iwall) {
+    auto naStackAxis = par -> GetParAxis(Form("naStackAxis%d",iwall));
+    auto naNumStack = par -> GetParInt(Form("naNumStack%d",iwall));
+    auto nadX = par -> GetParDouble(Form("nadX%d",iwall));
+    auto nadY = par -> GetParDouble(Form("nadY%d",iwall));
+    auto nadZ = par -> GetParDouble(Form("nadZ%d",iwall));
+    auto naXOffset = par -> GetParDouble(Form("naXOffset%d",iwall));
+    auto naYOffset = par -> GetParDouble(Form("naYOffset%d",iwall));
+    auto naZOffset = par -> GetParDouble(Form("naZOffset%d",iwall));
+
+    G4Box* solidScint = new G4Box(Form("Scintillator_%d",iwall), 0.5*nadX, 0.5*nadY, 0.5*nadZ);
+    G4LogicalVolume* logicScint = new G4LogicalVolume(solidScint, scint_mat, Form("Scintillator_%d",iwall));
+
+    KBGeoBoxStack boxStack(naXOffset,naYOffset,naZOffset,nadX,nadY,nadZ,naNumStack,naStackAxis,KBVector3::kZ);
+
+    for (auto copy = 0; copy < naNumStack; ++copy) {
+      Int_t id = 10000+copy+iwall*100;
+      G4String name = Form("Scintillator_%d_%d",iwall,copy);
+      auto box = boxStack.GetBox(copy);
+      auto pos = box.GetCenter();
+      G4ThreeVector gpos(pos.X(),pos.Y(),pos.Z());
+      auto cpvp = new G4PVPlacement(0, gpos, logicScint, name, logicWorld, false, id, true);
+      runManager -> SetSensitiveDetector(cpvp);
+    }
+  }
 
   new G4GlobalMagFieldMessenger(G4ThreeVector(bfieldx*tesla, bfieldy*tesla, bfieldz*tesla));
 

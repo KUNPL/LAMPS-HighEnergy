@@ -8,4 +8,6 @@
 #pragma link C++ class LHPadPlane+;
 #pragma link C++ class LHPadPlaneRPad+;
 
+#pragma link C++ class LHNeutronScintArray+;
+
 #endif

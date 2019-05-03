@@ -2,9 +2,41 @@
 #include "LHPadPlane.hh"
 #include "LHPadPlaneRPad.hh"
 
+ClassImp(LHTpc)
+
 LHTpc::LHTpc()
-:KBTpc("LAMPSTPC","LAMPS TPC")
+:KBTpc("LAMPS-TPC","cylinderical time projection chamber")
 {
+}
+
+bool LHTpc::Init()
+{
+  fEFieldAxis = fPar -> GetParAxis("tpcEFieldAxis");
+
+  if (BuildGeometry() == false)
+    return false;
+
+  if (BuildDetectorPlane() == false)
+    return false;
+
+  return true;
+}
+
+KBVector3::Axis LHTpc::GetEFieldAxis()
+{
+  return fEFieldAxis;
+}
+
+TVector3 LHTpc::GetEField(TVector3)
+{
+  KBVector3 e(0,0,0);
+  e.AddAt(1,fEFieldAxis);
+  return e;
+}
+
+KBPadPlane *LHTpc::GetDriftPlane(TVector3 pos)
+{
+  fDetectorPlaneArray -> At(0);
 }
 
 bool LHTpc::BuildGeometry()
@@ -20,12 +52,9 @@ bool LHTpc::BuildGeometry()
   auto rMaxTPC = fPar -> GetParDouble("rMaxTPC");
   auto tpcLength = fPar -> GetParDouble("tpcLength");
   auto zOffset = fPar -> GetParDouble("zOffset");
+TGeoMedium *p10 = new TGeoMedium("p10", 1, new TGeoMaterial("p10"));
 
-  TGeoMedium *p10 = new TGeoMedium("p10", 1, new TGeoMaterial("p10"));
-
-  TGeoVolume *top = new TGeoVolumeAssembly("TOP");
-  fGeoManager -> SetTopVolume(top);
-  fGeoManager -> SetTopVisible(true);
+  auto top = CreateGeoTop();
 
   TGeoVolume *tpc = new TGeoVolumeAssembly("TPC");
   TGeoTranslation *offTPC = new TGeoTranslation("TPC offset",0,0,zOffset);
@@ -35,10 +64,11 @@ bool LHTpc::BuildGeometry()
   gas -> SetLineColor(kBlue-10);
   gas -> SetTransparency(90);
 
-  top -> AddNode(tpc, 1, offTPC);
+  top -> AddNode(tpc, top->GetNdaughters()+1, offTPC);
   tpc -> AddNode(gas, 1);
+  //top -> AddNode(gas, top->GetNdaughters()+1, offTPC);
 
-  fGeoManager -> CloseGeometry();
+  FinishGeometry();
 
   return true;
 }
@@ -53,7 +83,7 @@ bool LHTpc::BuildDetectorPlane()
 
   padplane -> SetParameterContainer(fPar);
   padplane -> SetPlaneID(0);
-  padplane -> SetPlaneK(fPlaneK[0]);
+  padplane -> SetPlaneK(fPar -> GetParDouble("tpcPadPlaneK0"));
   padplane -> SetAxis(KBVector3::kX, KBVector3::kY);
   padplane -> Init();
 

@@ -15,7 +15,7 @@ using namespace std;
 ClassImp(LHPadPlaneRPad)
 
 LHPadPlaneRPad::LHPadPlaneRPad()
-:KBPadPlane("LAMPSTPC PadPlane RectangularPads", "LAMPS-TPC Pad Plane with rectangular pads")
+:KBPadPlane("PadPlaneR", "pad plane with rectangular pads for LAMPS-TPC")
 {
 }
 
@@ -28,7 +28,7 @@ bool LHPadPlaneRPad::Init()
   fPadHei = fPar -> GetParDouble("PadHeight");
   fYPPMin = fPar -> GetParDouble("YPPMin");
   if (fYPPMin+.5*fPadHei > fRMin) {
-    cout << "'YPPMin' + 'fPadHei'/2 should be larger than 'rMinTPC'!  :  " << fYPPMin+.5*fPadHei << " < " << fRMin << endl;
+    kb_error << "'YPPMin' + 'fPadHei'/2 should be larger than 'rMinTPC'!  :  " << fYPPMin+.5*fPadHei << " < " << fRMin << endl;
     return false;
   }
   fYPPMax = fPar -> GetParDouble("YPPMax");

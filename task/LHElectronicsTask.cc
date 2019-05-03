@@ -16,9 +16,9 @@ bool LHElectronicsTask::Init()
   KBRun *run = KBRun::GetRun();
 
   KBParameterContainer *par = run -> GetParameterContainer();
-  KBDetector *det = run -> GetDetector();
+  LHTpc *det = (LHTpc *) (run -> GetDetectorSystem() -> GetTpc());
 
-  fNPlanes = det -> GetNPlanes();
+  fNPlanes = det -> GetNumPlanes();
   fNTbs = par -> GetParInt("nTbs");
   feVToADC = par -> GetParDouble("eVToADC");
   fDynamicRange = par -> GetParDouble("dynamicRange");

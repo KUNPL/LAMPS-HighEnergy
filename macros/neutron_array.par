@@ -1,0 +1,37 @@
+numNeutronWall i 4
+
+  naStackAxis0   a  y
+  naNumStack0    i  20
+  nadX0          d  2000    # mm
+  nadY0          d  100     # mm
+  nadZ0          d  100     # mm
+  naXOffset0     d  0       # mm
+  naYOffset0     d  0       # mm
+  naZOffset0     d  2000    # mm
+
+  naStackAxis1   a  x
+  naNumStack1    i  20
+  nadX1          d  100     # mm
+  nadY1          d  2000    # mm
+  nadZ1          d  100     # mm
+  naXOffset1     d  0       # mm
+  naYOffset1     d  0       # mm
+  naZOffset1     d  2500    # mm
+
+  naStackAxis2   a  y
+  naNumStack2    i  20
+  nadX2          d  2000    # mm
+  nadY2          d  100     # mm
+  nadZ2          d  100     # mm
+  naXOffset2     d  0       # mm
+  naYOffset2     d  0       # mm
+  naZOffset2     d  3000    # mm
+
+  naStackAxis3   a  x
+  naNumStack3    i  20
+  nadX3          d  100     # mm
+  nadY3          d  2000    # mm
+  nadZ3          d  100     # mm
+  naXOffset3     d  0       # mm
+  naYOffset3     d  0       # mm
+  naZOffset3     d  3500    # mm

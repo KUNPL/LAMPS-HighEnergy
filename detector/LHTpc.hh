@@ -9,9 +9,20 @@ class LHTpc : public KBTpc
     LHTpc();
     virtual ~LHTpc() {};
 
+    virtual bool Init();
+
+    KBVector3::Axis GetEFieldAxis();
+
+    void GetDriftPlane(Double_t k, Int_t &planeID, Double_t &kPlane);
+
+    virtual TVector3 GetEField(TVector3 pos);
+    virtual KBPadPlane *GetDriftPlane(TVector3 pos);
+
   protected:
     virtual bool BuildGeometry();
     virtual bool BuildDetectorPlane();
+
+    KBVector3::Axis fEFieldAxis = KBVector3::kNon;
 
   ClassDef(LHTpc, 1)
 };

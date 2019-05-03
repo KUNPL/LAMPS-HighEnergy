@@ -1,0 +1,4 @@
+#eveSelectTrackIDs s
+eveSelectTrackParentIDs s +:0
+eveSelectTrackPDGs s +:2112
+#eveSelectTrackPDGs s -:2112:11:-11 

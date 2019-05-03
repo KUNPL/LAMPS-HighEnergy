@@ -22,7 +22,7 @@ bool LHTrackFindingTask::Init()
   fTrackArray = new TClonesArray("KBHelixTrack");
   run -> RegisterBranch("Tracklet", fTrackArray, fPersistency);
 
-  LHTpc *tpc = (LHTpc *) run -> GetDetector();
+  LHTpc *tpc = (LHTpc *) (run -> GetDetectorSystem() -> GetTpc());
 
   fTrackFinder = new LHTrackFinder();
   fTrackFinder -> SetParameterContainer(par);

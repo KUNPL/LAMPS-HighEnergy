@@ -2,7 +2,7 @@
 #define LHELECTRONICSTASK_HH
 
 #include "KBTask.hh"
-#include "KBTpc.hh"
+#include "LHTpc.hh"
 #include "KBPulseGenerator.hh"
 
 #include "TH2D.h"

@@ -2,7 +2,7 @@
 #define LHTRACKFINDER_HH
 
 //#define CHECK_INITIAL_HITS 1 //XXX
-#define PRINT_PROCESS_SUMMARY
+//#define PRINT_PROCESS_SUMMARY
 
 #include "KBTrackFinder.hh"
 #include "KBHelixTrack.hh"
