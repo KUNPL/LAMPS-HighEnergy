@@ -1,7 +1,3 @@
-#G4InputFile   s  $KEBIPATH/input/IQMD_short.gen
-#G4OutputFile  s  $KEBIPATH/data/tpc_rec.mc.root
-#MCStepPersistency b true
-
 worlddX d 1500
 worlddY d 1500
 worlddZ d 4200

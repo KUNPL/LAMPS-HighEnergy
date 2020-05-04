@@ -1,4 +1,4 @@
-void reco(TString name = "lamps_high")
+void run_reco(TString name = "iqmd_test")
 {
   auto run = KBRun::GetRun();
   run -> SetIOFile(name+".digi", name+".reco");
@@ -6,11 +6,13 @@ void reco(TString name = "lamps_high")
 
   auto psa = new KBPSATask();
   psa -> SetPSA(new KBPSAFastFit());
-
   run -> Add(psa);
-  run -> Add(new LHTrackFindingTask());
+
+  run -> Add(new LHHelixTrackFindingTask());
+
   run -> Add(new LHVertexFindingTask());
 
   run -> Init();
-  run -> RunSingle(0);
+  //run -> RunSingle(5);
+  run -> Run();
 }

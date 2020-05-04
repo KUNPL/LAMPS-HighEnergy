@@ -1,0 +1,10 @@
+#eveSelectTrackIDs s
+#eveSelectTrackParentIDs s +:0:1
+eveSelectTrackParentIDs s +:1
+#eveSelectTrackPDGs s +:2112
+#eveSelectTrackPDGs s -:2112:11:-11:2212
+
+#eveAxisX d 0
+#eveAxisY d 0
+#eveAxisZ d 0
+#eveAxisL d 1000

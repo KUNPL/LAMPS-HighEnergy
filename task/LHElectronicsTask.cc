@@ -52,7 +52,7 @@ void LHElectronicsTask::Exec(Option_t*)
         for (Int_t tb = 0; tb < 512; ++tb) {
           out[tb] += ev1 * fPulseFunction -> Eval(tb+0.5);
           if (out[tb] > fDynamicRange)
-            out[tb] = fDynamicRange;
+            out[tb] = fDynamicRange+1;
         }
       }
     }
@@ -69,21 +69,27 @@ void LHElectronicsTask::Exec(Option_t*)
 
           out[tb] += in[iTb] * fPulseFunction -> Eval(iTb2+0.5);
           if (out[tb] > fDynamicRange)
-            out[tb] = fDynamicRange;
+            out[tb] = fDynamicRange+1;
         }
       }
     }
 
     auto saturated = false;
-    Int_t saturatedAt = 100000;
+    Int_t saturatedFrom = 100000;
+    Int_t saturatedTo = 100000;
     for (Int_t iTb = 0; iTb < fNTbs; iTb++) {
-      if (out[iTb] > fDynamicRange) {
+      if (!saturated && out[iTb] > fDynamicRange) {
         saturated = true;
-        saturatedAt = iTb;
+        saturatedFrom = iTb;
+      }
+      if (saturated && out[iTb] < fDynamicRange) {
+        saturatedTo = iTb;
         break;
       }
     }
-    for (Int_t iTb = saturatedAt+10; iTb < fNTbs; iTb++)
+
+    if (saturatedTo-saturatedFrom>=5)
+    for (Int_t iTb = saturatedFrom+5; iTb < fNTbs; iTb++)
       out[iTb] = 0;
 
     pad -> SetBufferOut(out);

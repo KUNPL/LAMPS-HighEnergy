@@ -106,32 +106,36 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 
 
 
-  G4Material* scint_mat = nist -> FindOrBuildMaterial("G4_XYLENE");
+  bool checkWall = par -> CheckPar("numNeutronWall");
+  if (checkWall)
+  {
+    G4Material* scint_mat = nist -> FindOrBuildMaterial("G4_XYLENE");
 
-  G4int numWall = par -> GetParInt("numNeutronWall");
-  for (auto iwall = 0; iwall < numWall; ++iwall) {
-    auto naStackAxis = par -> GetParAxis(Form("naStackAxis%d",iwall));
-    auto naNumStack = par -> GetParInt(Form("naNumStack%d",iwall));
-    auto nadX = par -> GetParDouble(Form("nadX%d",iwall));
-    auto nadY = par -> GetParDouble(Form("nadY%d",iwall));
-    auto nadZ = par -> GetParDouble(Form("nadZ%d",iwall));
-    auto naXOffset = par -> GetParDouble(Form("naXOffset%d",iwall));
-    auto naYOffset = par -> GetParDouble(Form("naYOffset%d",iwall));
-    auto naZOffset = par -> GetParDouble(Form("naZOffset%d",iwall));
+    G4int numWall = par -> GetParInt("numNeutronWall");
+    for (auto iwall = 0; iwall < numWall; ++iwall) {
+      auto naStackAxis = par -> GetParAxis(Form("naStackAxis%d",iwall));
+      auto naNumStack = par -> GetParInt(Form("naNumStack%d",iwall));
+      auto nadX = par -> GetParDouble(Form("nadX%d",iwall));
+      auto nadY = par -> GetParDouble(Form("nadY%d",iwall));
+      auto nadZ = par -> GetParDouble(Form("nadZ%d",iwall));
+      auto naXOffset = par -> GetParDouble(Form("naXOffset%d",iwall));
+      auto naYOffset = par -> GetParDouble(Form("naYOffset%d",iwall));
+      auto naZOffset = par -> GetParDouble(Form("naZOffset%d",iwall));
 
-    G4Box* solidScint = new G4Box(Form("Scintillator_%d",iwall), 0.5*nadX, 0.5*nadY, 0.5*nadZ);
-    G4LogicalVolume* logicScint = new G4LogicalVolume(solidScint, scint_mat, Form("Scintillator_%d",iwall));
+      G4Box* solidScint = new G4Box(Form("Scintillator_%d",iwall), 0.5*nadX, 0.5*nadY, 0.5*nadZ);
+      G4LogicalVolume* logicScint = new G4LogicalVolume(solidScint, scint_mat, Form("Scintillator_%d",iwall));
 
-    KBGeoBoxStack boxStack(naXOffset,naYOffset,naZOffset,nadX,nadY,nadZ,naNumStack,naStackAxis,KBVector3::kZ);
+      KBGeoBoxStack boxStack(naXOffset,naYOffset,naZOffset,nadX,nadY,nadZ,naNumStack,naStackAxis,KBVector3::kZ);
 
-    for (auto copy = 0; copy < naNumStack; ++copy) {
-      Int_t id = 10000+copy+iwall*100;
-      G4String name = Form("Scintillator_%d_%d",iwall,copy);
-      auto box = boxStack.GetBox(copy);
-      auto pos = box.GetCenter();
-      G4ThreeVector gpos(pos.X(),pos.Y(),pos.Z());
-      auto cpvp = new G4PVPlacement(0, gpos, logicScint, name, logicWorld, false, id, true);
-      runManager -> SetSensitiveDetector(cpvp);
+      for (auto copy = 0; copy < naNumStack; ++copy) {
+        Int_t id = 10000+copy+iwall*100;
+        G4String name = Form("Scintillator_%d_%d",iwall,copy);
+        auto box = boxStack.GetBox(copy);
+        auto pos = box.GetCenter();
+        G4ThreeVector gpos(pos.X(),pos.Y(),pos.Z());
+        auto cpvp = new G4PVPlacement(0, gpos, logicScint, name, logicWorld, false, id, true);
+        runManager -> SetSensitiveDetector(cpvp);
+      }
     }
   }
 

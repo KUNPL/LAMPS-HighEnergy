@@ -2,6 +2,8 @@
 #include "KBHelixTrack.hh"
 
 #include "KBRun.hh"
+#include "KBHit.hh"
+#include "KBTpcHit.hh"
 
 #include <iostream>
 using namespace std;
@@ -22,6 +24,12 @@ bool LHVertexFindingTask::Init()
   fVertexArray = new TClonesArray("KBVertex");
   run -> RegisterBranch("Vertex", fVertexArray, fPersistency);
 
+  fClusterArray = new TClonesArray("KBTpcHit");
+  run -> RegisterBranch("HitCluster", fClusterArray, fPersistency);
+
+  fTrackArray2 = new TClonesArray("KBHelixTrack");
+  run -> RegisterBranch("VertexTrack", fTrackArray2, fPersistency);
+
   TString  axis = run -> GetParameterContainer() -> GetParString("tpcBFieldAxis");
        if (axis == "x") fReferenceAxis = KBVector3::kX;
   else if (axis == "y") fReferenceAxis = KBVector3::kY;
@@ -39,7 +47,8 @@ void LHVertexFindingTask::Exec(Option_t*)
     return;
   }
 
-  KBVertex *vertex = new ((*fVertexArray)[0]) KBVertex();
+  KBVertex *vertex = (KBVertex *) fVertexArray -> ConstructedAt(0);
+  vertex -> SetTrackID(10000000); //TODO
 
   Double_t sLeast = 1.e8;
   Double_t kAtSLeast = 0;
@@ -60,11 +69,22 @@ void LHVertexFindingTask::Exec(Option_t*)
   Int_t numTracks = fTrackArray -> GetEntriesFast();
   for (Int_t iTrack = 0; iTrack < numTracks; iTrack++) {
     KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
-    track -> Fit();
-    track -> DetermineParticleCharge(vertex -> GetPosition());
+
+    if (track -> GetParentID() == 0) {
+      track -> Fit();
+      track -> DetermineParticleCharge(vertex -> GetPosition());
+    }
+    else {
+      auto trackID = track -> GetTrackID();
+      track -> SetTrackID(-1);
+      track -> FinalizeHits();
+      track -> SetTrackID(trackID);
+    }
   }
 
   auto pos = vertex -> GetPosition();
+
+  //NewTrackWithHitClsuters(vertex);
 
   kb_info << "Found vertex at " << Form("(%.1f, %.1f, %.1f)",pos.X(),pos.Y(),pos.Z()) << " with " << vertex -> GetNumTracks() << " tracks" << endl;
 
@@ -119,3 +139,75 @@ Double_t LHVertexFindingTask::TestVertexAtK(KBVertex *vertex, KBVector3 testPosi
 }
 
 void LHVertexFindingTask::SetVertexPersistency(bool val) { fPersistency = val; }
+
+
+
+void LHVertexFindingTask::NewTrackWithHitClsuters(KBHit *vertex) // TODO for curling tracks
+{
+  kb_debug << endl;
+  Int_t numTracks = fTrackArray -> GetEntriesFast();
+  kb_debug << endl;
+  for (Int_t iTrack = 0; iTrack < numTracks; ++iTrack) {
+    KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
+    KBHelixTrack *track2 = (KBHelixTrack *) fTrackArray2 -> ConstructedAt(iTrack);
+    auto hitArray = track -> GetHitArray();
+    hitArray -> SortByLayer(1);
+    kb_debug << endl;
+
+    KBTpcHit *currentCluster = nullptr;
+    Int_t currentLayer = -1;
+    Int_t countClusters = 0;
+    kb_debug << endl;
+
+    track2 -> AddHit(vertex);
+    auto numHits = hitArray -> GetNumHits();
+    for (auto iHit=0; iHit<=numHits; ++iHit)
+    {
+      auto hit = (KBTpcHit *) hitArray -> GetHit(iHit);
+      auto layer = hit -> GetLayer();
+      kb_debug << endl;
+
+      if (iHit==0)
+      {
+        kb_debug << endl;
+        currentLayer = hit -> GetLayer();
+        kb_debug << endl;
+        currentCluster = (KBTpcHit *) fClusterArray -> ConstructedAt(countClusters++);
+        kb_debug << endl;
+        currentCluster -> SetHitID(countClusters);
+        kb_debug << endl;
+        currentCluster -> SetLayer(layer);
+        kb_debug << endl;
+        currentCluster -> AddHit(hit);
+        kb_debug << endl;
+      }
+      else if (layer != currentLayer) {
+        kb_debug << endl;
+        track2 -> AddHit(currentCluster);
+        kb_debug << endl;
+        currentLayer = layer;
+        kb_debug << endl;
+        currentCluster = (KBTpcHit *) fClusterArray -> ConstructedAt(countClusters++);
+        kb_debug << endl;
+        currentCluster -> SetHitID(countClusters);
+        kb_debug << endl;
+        currentCluster -> SetLayer(layer);
+        kb_debug << endl;
+        currentCluster -> AddHit(hit);
+      }
+      else {
+        kb_debug << endl;
+        currentCluster -> AddHit(hit);
+      }
+    }
+    kb_debug << endl;
+    track2 -> AddHit(currentCluster);
+    kb_debug << endl;
+    track2 -> Fit();
+    kb_debug << endl;
+    track2 -> FinalizeHits();
+    kb_debug << endl;
+  }
+
+  return;
+}

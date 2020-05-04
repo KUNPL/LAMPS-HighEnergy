@@ -242,7 +242,7 @@ bool LHPadPlaneRPad::Init()
   }
 
   for (Int_t iSection = 0; iSection < 8; iSection++) {
-    for (Int_t iLayer = 0; iLayer < fLayerMax; iLayer++) {
+    for (Int_t iLayer = 0; iLayer <= fLayerMax; iLayer++) {
       Int_t nHalfRows = fHalfRowMax[iLayer];
       for (Int_t iRow = -nHalfRows; iRow < nHalfRows; iRow++) {
         if (iRow == 0)
@@ -269,7 +269,7 @@ bool LHPadPlaneRPad::Init()
   }
 
   for (Int_t iSection = 0; iSection < 8; iSection++) {
-    for (Int_t iLayer = 0; iLayer < fLayerMax-1; iLayer++) {
+    for (Int_t iLayer = 0; iLayer <= fLayerMax-1; iLayer++) {
       Int_t nHalfRows0 = fHalfRowMax[iLayer];
       Int_t nHalfRows1 = fHalfRowMax[iLayer+1];
       for (Int_t iRow = -nHalfRows0; iRow <= nHalfRows0; iRow++) {
@@ -314,7 +314,7 @@ bool LHPadPlaneRPad::Init()
     }
   }
 
-  for (Int_t iLayer = 0; iLayer < fLayerMax; iLayer++) {
+  for (Int_t iLayer = 0; iLayer <= fLayerMax; iLayer++) {
     Int_t nHalfRows = fHalfRowMax[iLayer];
     if (iLayer != 0 && fHalfRowMax[iLayer-1] > nHalfRows)
       break;

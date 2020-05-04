@@ -1,6 +1,4 @@
-//void mcreco(TString name = "tpc_rec")
-//void mcreco(TString name = "single_IQMD")
-void mcreco(TString name = "lamps_high")
+void mcreco_singletrack(TString name = "single_proton")
 {
   auto run = KBRun::GetRun();
   run -> SetIOFile(name+".mc", name+".mcreco");
@@ -18,10 +16,8 @@ void mcreco(TString name = "lamps_high")
   psa -> SetPSA(new KBPSAFastFit());
 
   run -> Add(psa);
-  run -> Add(new LHTrackFindingTask());
-  run -> Add(new LHVertexFindingTask());
+  run -> Add(new KBSingleHelixTask());
 
   run -> Init();
-  //run -> Run();
-  run -> RunSingle(0);
+  run -> Run();
 }

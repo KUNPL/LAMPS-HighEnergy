@@ -52,7 +52,7 @@ bool LHTpc::BuildGeometry()
   auto rMaxTPC = fPar -> GetParDouble("rMaxTPC");
   auto tpcLength = fPar -> GetParDouble("tpcLength");
   auto zOffset = fPar -> GetParDouble("zOffset");
-TGeoMedium *p10 = new TGeoMedium("p10", 1, new TGeoMaterial("p10"));
+  TGeoMedium *p10 = new TGeoMedium("p10", 1, new TGeoMaterial("p10"));
 
   auto top = CreateGeoTop();
 
@@ -66,7 +66,6 @@ TGeoMedium *p10 = new TGeoMedium("p10", 1, new TGeoMaterial("p10"));
 
   top -> AddNode(tpc, top->GetNdaughters()+1, offTPC);
   tpc -> AddNode(gas, 1);
-  //top -> AddNode(gas, top->GetNdaughters()+1, offTPC);
 
   FinishGeometry();
 

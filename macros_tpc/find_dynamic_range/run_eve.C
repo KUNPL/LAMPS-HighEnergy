@@ -6,18 +6,16 @@ void nx(Int_t eventID = -1) {
   cout << "Event " << fEventID << endl;
 }
 
-//void eve(TString name = "/Users/ejungwoo/kebii/data/lamps_high.mcreco.root")
-//void eve(TString name = "/Users/ejungwoo/kebii/data/lamps_high.mc.root")
-void eve(TString name = "last")
+void run_eve(TString name = "single_proton.psa")
 {
   auto run = new KBRun();
   run -> SetInputFile(name);
   run -> SetTag("eve");
   //run -> SelectEveBranches("Tracklet:Hit");
+  run -> SelectEveBranches("Hit");
   run -> AddDetector(new LHTpc());
-  //run -> AddDetector(new LHNeutronScintArray());
   run -> Init();
-  //run -> AddPar("kbeve.par");
+  //run -> AddPar("kb_eve.par");
   run -> SetGeoTransparency(80);
   run -> RunEve(fEventID);
 }

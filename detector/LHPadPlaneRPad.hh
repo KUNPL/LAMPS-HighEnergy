@@ -61,6 +61,21 @@ class LHPadPlaneRPad : public KBPadPlane
 
     Bool_t fRemoveCuttedPad = false;
 
+  public:
+    Double_t GetPadGap()          const { return fPadGap; }
+    Double_t GetPadWid()          const { return fPadWid; }
+    Double_t GetPadHei()          const { return fPadHei; }
+    Double_t GetYPPMin()          const { return fYPPMin; }
+    Double_t GetYPPMax()          const { return fYPPMax; }
+    Double_t GetWPPBot()          const { return fWPPBot; }
+    Double_t GetPadAreaLL()       const { return fPadAreaLL; }
+    Double_t GetRMin()            const { return fRMin; }
+    Double_t GetRMax()            const { return fRMax; }
+       Int_t GetLayerMax()        const { return fLayerMax; }
+    Double_t GetXSpacing()        const { return fXSpacing; }
+    Double_t GetYSpacing()        const { return fYSpacing; }
+      Bool_t GetRemoveCuttedPad() const { return fRemoveCuttedPad; }
+
   ClassDef(LHPadPlaneRPad, 1)
 };
 

@@ -1,4 +1,4 @@
-void digi(TString name = "lamps_high")
+void run_digi(TString name = "iqmd_test")
 {
   auto run = KBRun::GetRun();
   run -> SetIOFile(name+".mc", name+".digi");
@@ -14,4 +14,5 @@ void digi(TString name = "lamps_high")
 
   run -> Init();
   run -> Run();
+  //run -> RunSingle(7);
 }

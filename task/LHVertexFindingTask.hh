@@ -20,9 +20,15 @@ class LHVertexFindingTask : public KBTask
 
     void SetVertexPersistency(bool val);
 
+    void NewTrackWithHitClsuters(KBHit *vertex);
+
   private:
-    TClonesArray* fTrackArray;
-    TClonesArray* fVertexArray;
+    TClonesArray* fTrackArray = nullptr;
+    TClonesArray* fVertexArray = nullptr;
+
+    TClonesArray *fTrackArray2 = nullptr;
+    TClonesArray *fClusterArray = nullptr;
+    TClonesArray* fVertexArray2 = nullptr;
 
     bool fPersistency = true;
 

@@ -6,12 +6,14 @@
 
 #pragma link C++ class LHDriftElectronTask+;
 #pragma link C++ class LHElectronicsTask+;
-#pragma link C++ class LHTrackFinder+;
-#pragma link C++ class LHTrackFindingTask+;
+//#pragma link C++ class LHTrackFinder+;
+//#pragma link C++ class LHTrackFindingTask+;
+#pragma link C++ class LHHelixTrackFindingTask+;
 #pragma link C++ class LHVertexFindingTask+;
 #pragma link C++ class LHMCRecoMatchingTask+;
 #pragma link C++ class LHMCRecoMatchingTask+;
 #pragma link C++ class LHRecoEfficiencyAna+;
+#pragma link C++ class LHSelectHitsBelongToMCIDTask+;
 
 #pragma link C++ class LHScintDigiTask+;
 

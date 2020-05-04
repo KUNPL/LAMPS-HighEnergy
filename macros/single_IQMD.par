@@ -1,0 +1,8 @@
+#G4VisFile     o s  vis.mac
+G4MacroFile   o s  run_geant4.mac
+G4InputFile   s  $KEBIPATH/input/single_IQMD.gen
+G4OutputFile  s  $KEBIPATH/data/single_IQMD.mc.root
+MCStepPersistency b true
+
+tpcPar f  tpc_rec.par
+naPar  f  neutron_array.par
